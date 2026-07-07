@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Table from "../ui/Table";
+import { GOOGLE_DRIVE_PROVIDER_ID } from "@/lib/connectors/public";
 
 const DriveFiles = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -15,7 +16,7 @@ const DriveFiles = () => {
     if (!searchKeyword) return;
     try {
       const response = await fetch(
-        `/api/google_drive/file?keyword=${searchKeyword}`,
+        `/api/connectors/${GOOGLE_DRIVE_PROVIDER_ID}/file?keyword=${searchKeyword}`,
       );
       if (!response.ok) throw new Error("Failed to fetch files");
       const data = await response.json();
