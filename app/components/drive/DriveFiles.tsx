@@ -1,7 +1,37 @@
 "use client";
+
 import { useState } from "react";
-import Table from "../ui/Table";
+import Table, { Column } from "../ui/Table";
 import { GOOGLE_DRIVE_PROVIDER_ID } from "@/lib/connectors/public";
+import { drive_v3 } from "googleapis";
+
+export type DriveFile = drive_v3.Schema$File & { accountEmail?: string };
+
+const columns: Column<DriveFile>[] = [
+  {
+    header: "Origin",
+    render: (file) => file.accountEmail || "Unknown",
+  },
+  {
+    header: "File Name",
+    render: (file) =>
+      file.webViewLink ? (
+        <a href={file.webViewLink} target="_blank" rel="noopener noreferrer">
+          {file.name}
+        </a>
+      ) : (
+        file.name
+      ),
+  },
+  {
+    header: "File Type",
+    render: (file) => file.mimeType,
+  },
+  {
+    header: "Last Modified",
+    render: (file) => file.modifiedTime,
+  },
+];
 
 const DriveFiles = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -10,7 +40,7 @@ const DriveFiles = () => {
     setSearchKeyword(e.target.value);
   };
 
-  const [files, setFiles] = useState<any[]>([]);
+  const [files, setFiles] = useState<DriveFile[]>([]);
 
   const handleSearch = async () => {
     if (!searchKeyword) return;
@@ -47,7 +77,7 @@ const DriveFiles = () => {
           </button>
         </div>
       </div>
-      <Table files={files} />
+      <Table items={files} columns={columns} />
     </div>
   );
 };

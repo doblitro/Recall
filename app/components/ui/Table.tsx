@@ -1,42 +1,37 @@
-import type { drive_v3 } from "googleapis";
+export type Column<T> = {
+  header: string;
+  render: (item: T) => React.ReactNode;
+};
 
-const Table = ({ files }: { files: any[] }) => {
+function Table<T extends { id?: string | null }>({
+  items,
+  columns,
+}: {
+  items: T[];
+  columns: Column<T>[];
+}) {
   return (
     <div className="overflow-x-auto">
       <table className="table w-full">
         <thead>
           <tr>
-            <th>Origin</th>
-            <th>File Name</th>
-            <th>File Type</th>
-            <th>Last Modified</th>
+            {columns.map((column) => (
+              <th key={column.header}>{column.header}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          {files.map((file: drive_v3.Schema$File) => (
-            <tr key={file.id}>
-              <td>{file.owners?.[0]?.emailAddress || "Unknown"}</td>
-              <td>
-                {file.webViewLink ? (
-                  <a
-                    href={file.webViewLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {file.name}
-                  </a>
-                ) : (
-                  file.name
-                )}
-              </td>
-              <td>{file.mimeType}</td>
-              <td>{file.modifiedTime}</td>
+          {items.map((item, index) => (
+            <tr key={item.id ?? index}>
+              {columns.map((column) => (
+                <td key={column.header}>{column.render(item)}</td>
+              ))}
             </tr>
           ))}
         </tbody>
       </table>
     </div>
   );
-};
+}
 
 export default Table;

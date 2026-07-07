@@ -69,16 +69,6 @@ export async function GET(request: NextRequest) {
   const q = `name contains '${sanitizedKeyword}' and trashed = false`;
 
   try {
-    if (integrationId) {
-      const accessToken = await getValidAccessToken(
-        user.id,
-        GOOGLE_DRIVE_PROVIDER_ID,
-        integrationId,
-      );
-      const files = await searchDriveFiles(accessToken, q);
-      return NextResponse.json({ files });
-    }
-
     const integrations = await getActiveIntegrations(
       user.id,
       GOOGLE_DRIVE_PROVIDER_ID,
@@ -91,6 +81,28 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (integrationId) {
+      const integration = integrations.find((i) => i.id === integrationId);
+      if (!integration) {
+        return NextResponse.json(
+          { error: "Integration not found" },
+          { status: 404 },
+        );
+      }
+      const accessToken = await getValidAccessToken(
+        user.id,
+        GOOGLE_DRIVE_PROVIDER_ID,
+        integrationId,
+      );
+      const files = await searchDriveFiles(accessToken, q);
+      return NextResponse.json({
+        files: files.map((file) => ({
+          ...file,
+          accountEmail: integration.accountEmail,
+        })),
+      });
+    }
+
     const filesByAccount = await Promise.all(
       integrations.map(async (integration) => {
         const accessToken = await getValidAccessToken(
@@ -98,7 +110,11 @@ export async function GET(request: NextRequest) {
           GOOGLE_DRIVE_PROVIDER_ID,
           integration.id,
         );
-        return searchDriveFiles(accessToken, q);
+        const files = await searchDriveFiles(accessToken, q);
+        return files.map((file) => ({
+          ...file,
+          accountEmail: integration.accountEmail,
+        }));
       }),
     );
 
