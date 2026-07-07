@@ -1,6 +1,5 @@
 import { google } from "googleapis";
 import { randomBytes } from "crypto";
-import { NextRequest } from "next/server";
 
 export async function POST() {
   const clientId = process.env.GOOGLE_CLIENT_ID;

@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       q: `name contains '${sanitizedKeyword}' and trashed = false`,
       pageSize: 20,
       fields:
-        "files(id, name, mimeType, webViewLink, thumbnailLink, modifiedTime)",
+        "files(id, name, mimeType, webViewLink, thumbnailLink, modifiedTime, owners)",
     });
 
     return NextResponse.json({ files: response.data.files });

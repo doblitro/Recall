@@ -10,7 +10,7 @@ const GoogleDriveConnect = () => {
   if (!session) return <p>Please log into the app first.</p>;
 
   const handleConnect = () => {
-    fetch("/api/google_drive/auth", {
+    fetch("/api/google_drive/connect", {
       method: "POST",
     })
       .then((response) => {

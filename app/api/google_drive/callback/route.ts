@@ -1,4 +1,8 @@
 import { google } from "googleapis";
+import { getServerSession } from "next-auth/next";
+import type { Session } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { prisma } from "@/lib/prisma/client";
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID || "",
@@ -76,9 +80,36 @@ export async function GET(request: Request) {
     });
   }
 
+  const session = (await getServerSession(authOptions)) as Session | null;
+  const userEmail = session?.user?.email;
+
   const expiresIn = tokens.expiry_date
     ? Math.floor((tokens.expiry_date - Date.now()) / 1000)
     : 3600;
+
+  if (userEmail) {
+    const user = await prisma.user.findUnique({ where: { email: userEmail } });
+
+    if (user) {
+      await prisma.integration.create({
+        data: {
+          userId: user.id,
+          provider: "google_drive",
+          providerAccountId: user.id,
+          accountEmail: userEmail,
+          accountName: session?.user?.name ?? userEmail,
+          accessToken: tokens.access_token ?? "",
+          refreshToken: tokens.refresh_token ?? null,
+          expiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
+          isActive: true,
+        },
+      });
+    } else {
+      console.warn("No user found for Google Drive integration insert", {
+        userEmail,
+      });
+    }
+  }
 
   const headers = new Headers();
   headers.append("Location", "/?drive_connected=1");
