@@ -19,24 +19,26 @@ export async function GET(
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
-    return NextResponse.json({ connected: false });
+    return NextResponse.json({ connections: [] });
   }
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
   });
   if (!user) {
-    return NextResponse.json({ connected: false });
+    return NextResponse.json({ connections: [] });
   }
 
-  const integration = await prisma.integration.findFirst({
+  const integrations = await prisma.integration.findMany({
     where: { userId: user.id, provider: providerId, isActive: true },
   });
 
   return NextResponse.json({
-    connected: !!integration,
-    accountEmail: integration?.accountEmail,
-    accountName: integration?.accountName,
-    connectedAt: integration?.connectedAt,
+    connections: integrations.map((integration) => ({
+      id: integration.id,
+      accountEmail: integration.accountEmail,
+      accountName: integration.accountName,
+      connectedAt: integration.connectedAt,
+    })),
   });
 }

@@ -53,8 +53,22 @@ export async function POST(
     });
   }
 
+  const { integrationId } = await request.json();
+
+  if (!integrationId) {
+    return NextResponse.json(
+      { error: "integrationId is required" },
+      { status: 400 },
+    );
+  }
+
   const integration = await prisma.integration.findFirst({
-    where: { userId: user.id, provider: providerId, isActive: true },
+    where: {
+      id: integrationId,
+      userId: user.id,
+      provider: providerId,
+      isActive: true,
+    },
   });
 
   if (!integration) {

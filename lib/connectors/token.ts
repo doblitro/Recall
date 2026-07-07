@@ -3,12 +3,19 @@ import { getProvider } from "./registry";
 
 export const REFRESH_BUFFER_MS = 60_000;
 
+export async function getActiveIntegrations(userId: string, providerId: string) {
+  return prisma.integration.findMany({
+    where: { userId, provider: providerId, isActive: true },
+  });
+}
+
 export async function getValidAccessToken(
   userId: string,
   providerId: string,
+  integrationId: string,
 ): Promise<string> {
   const integration = await prisma.integration.findFirst({
-    where: { userId, provider: providerId, isActive: true },
+    where: { id: integrationId, userId, provider: providerId, isActive: true },
   });
 
   if (!integration) {

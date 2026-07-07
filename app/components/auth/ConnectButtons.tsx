@@ -1,15 +1,13 @@
 "use client";
 
-import useIsConnected from "@/app/hooks/useIsConnected";
+import useConnections from "@/app/hooks/useConnections";
 import { CONNECTOR_LIST } from "@/lib/connectors/public";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
 
 const ConnectButtons = ({ type }: { type: string }) => {
   const { data: session, status } = useSession();
-  const isConnected = useIsConnected(type);
+  const { connections, refresh } = useConnections(type);
   const label = CONNECTOR_LIST.find((p) => p.id === type)?.label ?? type;
-  const [showAdd, setShowAdd] = useState(true);
 
   if (status === "loading") return <p>Checking session...</p>;
   if (!session) return <p>Please log into the app first.</p>;
@@ -31,39 +29,45 @@ const ConnectButtons = ({ type }: { type: string }) => {
       .catch((error) => {
         console.error(`Error initiating ${type} OAuth:`, error);
       });
-
-    setShowAdd(!showAdd);
   };
 
-  const handleDisconnect = () => {
+  const handleDisconnect = (integrationId: string) => {
     fetch(`/api/connectors/${type}/disconnect`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ integrationId }),
     })
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Failed to disconnect ${type}`);
         }
-        window.location.reload();
+        refresh();
       })
       .catch((error) => {
         console.error(`Error disconnecting ${type}:`, error);
       });
-
-    setShowAdd(!showAdd);
   };
 
   return (
-    <div>
+    <div className="flex flex-col gap-2 items-center">
+      {connections.map((connection) => (
+        <div key={connection.id} className="flex items-center gap-2">
+          <span>{connection.accountEmail ?? label}</span>
+          <button
+            onClick={() => handleDisconnect(connection.id)}
+            className="px-4 py-2 text-white rounded bg-red-600 hover:bg-red-700"
+          >
+            Disconnect
+          </button>
+        </div>
+      ))}
       <button
-        onClick={() => (isConnected ? handleDisconnect() : handleConnect())}
-        className={
-          `px-4 py-2 text-white rounded disabled:bg-gray-400 disabled:cursor-not-allowed` +
-          (isConnected
-            ? " bg-red-600 hover:bg-red-700"
-            : " bg-blue-600 hover:bg-blue-700")
-        }
+        onClick={handleConnect}
+        className="px-4 py-2 text-white rounded bg-blue-600 hover:bg-blue-700"
       >
-        {isConnected ? `Disconnect ${label}` : `Connect to ${label}`}
+        {connections.length > 0
+          ? `Connect another ${label}`
+          : `Connect to ${label}`}
       </button>
     </div>
   );
