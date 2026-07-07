@@ -21,7 +21,7 @@ const LoginButton = () => {
 
   return (
     <button
-      onClick={() => signIn("google", {}, { prompt: "select_account" })}
+      onClick={() => signIn("google", { prompt: "select_account" })}
       className="px-4 py-2 bg-blue-600 text-white rounded"
     >
       Sign in with Google
