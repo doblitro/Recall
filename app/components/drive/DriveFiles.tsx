@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Table, { Column } from "../ui/Table";
 import { GOOGLE_DRIVE_PROVIDER_ID } from "@/lib/connectors/public";
 import { drive_v3 } from "googleapis";
@@ -33,50 +33,41 @@ const columns: Column<DriveFile>[] = [
   },
 ];
 
-const DriveFiles = () => {
-  const [searchKeyword, setSearchKeyword] = useState("");
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchKeyword(e.target.value);
-  };
-
+const DriveFiles = ({ searchKeyword }: { searchKeyword: string }) => {
   const [files, setFiles] = useState<DriveFile[]>([]);
 
-  const handleSearch = async () => {
-    if (!searchKeyword) return;
-    try {
-      const response = await fetch(
-        `/api/connectors/${GOOGLE_DRIVE_PROVIDER_ID}/file?keyword=${searchKeyword}`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch files");
-      const data = await response.json();
-      setFiles(data.files || []);
-    } catch (error) {
-      console.error("Error fetching files:", error);
+  useEffect(() => {
+    if (!searchKeyword) {
       setFiles([]);
+      return;
     }
-  };
+
+    let cancelled = false;
+
+    const fetchFiles = async () => {
+      try {
+        const response = await fetch(
+          `/api/connectors/${GOOGLE_DRIVE_PROVIDER_ID}/file?keyword=${searchKeyword}`,
+        );
+        if (!response.ok) throw new Error("Failed to fetch files");
+        const data = await response.json();
+        if (!cancelled) setFiles(data.files || []);
+      } catch (error) {
+        console.error("Error fetching files:", error);
+        if (!cancelled) setFiles([]);
+      }
+    };
+
+    fetchFiles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchKeyword]);
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Google Drive Files</h2>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Search files..."
-            className="border rounded px-2 py-1"
-            value={searchKeyword}
-            onChange={handleInputChange}
-          />
-          <button
-            className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
-            onClick={handleSearch}
-          >
-            Search
-          </button>
-        </div>
-      </div>
+      <h2 className="text-lg font-semibold">Google Drive Files</h2>
       <Table items={files} columns={columns} />
     </div>
   );
