@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  integrations Integration[]
+}
+
+model Integration {
+  id                String   @id @default(cuid())
+
+  // Relation
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Provider
+  provider          String
+  providerAccountId String
+
+  // Display
+  accountEmail      String?
+  accountName       String?
+  accountAvatar     String?
+
+  // OAuth
+  accessToken       String   @db.Text
+  refreshToken      String?  @db.Text
+  expiresAt         DateTime?
+
+  // Metadata
+  connectedAt       DateTime @default(now())
+  lastSyncedAt      DateTime?
+  isActive          Boolean  @default(true)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
+}
