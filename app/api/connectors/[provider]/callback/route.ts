@@ -121,6 +121,10 @@ export async function GET(
       isActive: true,
     },
     update: {
+      userId: user.id,
+      accountEmail: tokens.accountEmail,
+      accountName: tokens.accountName,
+      accountAvatar: tokens.accountAvatar,
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       expiresAt: tokens.expiresAt,
