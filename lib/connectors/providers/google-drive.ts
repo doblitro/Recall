@@ -1,13 +1,10 @@
 import { google } from "googleapis";
 import type { ConnectorProvider } from "../types";
 import { GOOGLE_DRIVE_PROVIDER_ID } from "../public";
+import { createGoogleOAuthClient } from "../google-oauth-client";
 
 function client() {
-  return new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI,
-  );
+  return createGoogleOAuthClient(GOOGLE_DRIVE_PROVIDER_ID);
 }
 
 export const googleDriveProvider: ConnectorProvider = {
@@ -20,11 +17,7 @@ export const googleDriveProvider: ConnectorProvider = {
     "https://www.googleapis.com/auth/drive.metadata.readonly",
     "https://www.googleapis.com/auth/drive.readonly",
   ],
-  requiredEnvVars: [
-    "GOOGLE_CLIENT_ID",
-    "GOOGLE_CLIENT_SECRET",
-    "GOOGLE_REDIRECT_URI",
-  ],
+  requiredEnvVars: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "NEXTAUTH_URL"],
   getAuthUrl(state) {
     return client().generateAuthUrl({
       access_type: "offline",
