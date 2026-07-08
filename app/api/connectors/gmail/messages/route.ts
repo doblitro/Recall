@@ -13,10 +13,21 @@ async function gmailFetch(
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
-  const data = await response.json();
+  const text = await response.text();
+  let data: any = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      data = null;
+    }
+  }
 
   if (!response.ok) {
-    throw new Error(`Gmail API error: ${JSON.stringify(data)}`);
+    const body = data ?? text;
+    throw new Error(
+      `Gmail API error: ${typeof body === "string" ? body : JSON.stringify(body)}`,
+    );
   }
 
   return data;
@@ -41,10 +52,9 @@ async function searchGmailMessages(accessToken: string, keyword: string) {
       ]);
 
       const headers = new Map<string, string>(
-        (data.payload?.headers ?? []).map((h: { name: string; value: string }) => [
-          h.name,
-          h.value,
-        ]),
+        (data.payload?.headers ?? []).map(
+          (h: { name: string; value: string }) => [h.name, h.value],
+        ),
       );
 
       return {
