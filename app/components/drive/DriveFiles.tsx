@@ -2,7 +2,7 @@
 
 import Table, { Column } from "../ui/Table";
 import { GOOGLE_DRIVE_PROVIDER_ID } from "@/lib/connectors/public";
-import { drive_v3 } from "googleapis";
+import type { drive_v3 } from "@googleapis/drive";
 import useConnectorSearch from "@/app/hooks/useConnectorSearch";
 
 export type DriveFile = drive_v3.Schema$File & { accountEmail?: string };

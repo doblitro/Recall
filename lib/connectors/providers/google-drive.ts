@@ -1,7 +1,9 @@
-import { google } from "googleapis";
 import type { ConnectorProvider } from "../types";
 import { GOOGLE_DRIVE_PROVIDER_ID } from "../public";
-import { createGoogleOAuthClient } from "../google-oauth-client";
+import {
+  createGoogleOAuthClient,
+  fetchGoogleUserProfile,
+} from "../google-oauth-client";
 
 function client() {
   return createGoogleOAuthClient(GOOGLE_DRIVE_PROVIDER_ID);
@@ -36,8 +38,7 @@ export const googleDriveProvider: ConnectorProvider = {
     }
 
     c.setCredentials(tokens);
-    const oauth2 = google.oauth2({ version: "v2", auth: c });
-    const { data: profile } = await oauth2.userinfo.get();
+    const profile = await fetchGoogleUserProfile(c);
 
     return {
       accessToken: tokens.access_token,

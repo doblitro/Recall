@@ -1,13 +1,14 @@
 import { GMAIL_PROVIDER_ID } from "@/lib/connectors/public";
 import { createSearchRoute } from "@/lib/connectors/search-route";
-import { google } from "googleapis";
+import { OAuth2Client } from "google-auth-library";
+import { gmail } from "@googleapis/gmail";
 
 async function searchGmailMessages(accessToken: string, keyword: string) {
-  const oauth2Client = new google.auth.OAuth2();
+  const oauth2Client = new OAuth2Client();
   oauth2Client.setCredentials({ access_token: accessToken });
-  const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+  const gmailClient = gmail({ version: "v1", auth: oauth2Client });
 
-  const response = await gmail.users.messages.list({
+  const response = await gmailClient.users.messages.list({
     userId: "me",
     q: keyword,
     maxResults: 20,
@@ -18,7 +19,7 @@ async function searchGmailMessages(accessToken: string, keyword: string) {
 
   return Promise.all(
     messages.map(async (message) => {
-      const { data } = await gmail.users.messages.get({
+      const { data } = await gmailClient.users.messages.get({
         userId: "me",
         id: message.id!,
         format: "metadata",
