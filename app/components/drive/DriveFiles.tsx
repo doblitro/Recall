@@ -2,10 +2,17 @@
 
 import Table, { Column } from "../ui/Table";
 import { GOOGLE_DRIVE_PROVIDER_ID } from "@/lib/connectors/public";
-import type { drive_v3 } from "@googleapis/drive";
 import useConnectorSearch from "@/app/hooks/useConnectorSearch";
 
-export type DriveFile = drive_v3.Schema$File & { accountEmail?: string };
+export type DriveFile = {
+  id?: string | null;
+  name?: string | null;
+  mimeType?: string | null;
+  webViewLink?: string | null;
+  thumbnailLink?: string | null;
+  modifiedTime?: string | null;
+  accountEmail?: string;
+};
 
 const columns: Column<DriveFile>[] = [
   {

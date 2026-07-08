@@ -1,33 +1,50 @@
 import { GMAIL_PROVIDER_ID } from "@/lib/connectors/public";
 import { createSearchRoute } from "@/lib/connectors/search-route";
-import { OAuth2Client } from "google-auth-library";
-import { gmail } from "@googleapis/gmail";
 
-async function searchGmailMessages(accessToken: string, keyword: string) {
-  const oauth2Client = new OAuth2Client();
-  oauth2Client.setCredentials({ access_token: accessToken });
-  const gmailClient = gmail({ version: "v1", auth: oauth2Client });
+async function gmailFetch(
+  accessToken: string,
+  path: string,
+  params: [string, string][] = [],
+) {
+  const url = new URL(`https://gmail.googleapis.com/gmail/v1/users/me${path}`);
+  for (const [key, value] of params) url.searchParams.append(key, value);
 
-  const response = await gmailClient.users.messages.list({
-    userId: "me",
-    q: keyword,
-    maxResults: 20,
-    fields: "messages(id, threadId)",
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
 
-  const messages = response.data.messages ?? [];
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(`Gmail API error: ${JSON.stringify(data)}`);
+  }
+
+  return data;
+}
+
+async function searchGmailMessages(accessToken: string, keyword: string) {
+  const listData = await gmailFetch(accessToken, "/messages", [
+    ["q", keyword],
+    ["maxResults", "20"],
+    ["fields", "messages(id, threadId)"],
+  ]);
+
+  const messages: { id: string }[] = listData.messages ?? [];
 
   return Promise.all(
     messages.map(async (message) => {
-      const { data } = await gmailClient.users.messages.get({
-        userId: "me",
-        id: message.id!,
-        format: "metadata",
-        metadataHeaders: ["Subject", "From", "Date"],
-      });
+      const data = await gmailFetch(accessToken, `/messages/${message.id}`, [
+        ["format", "metadata"],
+        ["metadataHeaders", "Subject"],
+        ["metadataHeaders", "From"],
+        ["metadataHeaders", "Date"],
+      ]);
 
-      const headers = new Map(
-        (data.payload?.headers ?? []).map((h) => [h.name, h.value]),
+      const headers = new Map<string, string>(
+        (data.payload?.headers ?? []).map((h: { name: string; value: string }) => [
+          h.name,
+          h.value,
+        ]),
       );
 
       return {
