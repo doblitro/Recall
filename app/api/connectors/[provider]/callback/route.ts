@@ -1,7 +1,7 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { readAndClearOAuthStateCookie } from "@/lib/connectors/oauth-state";
 import { getProvider } from "@/lib/connectors/registry";
-import { prisma } from "@/lib/prisma/client";
+import { getPrismaClient } from "@/lib/prisma/client";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
@@ -89,6 +89,7 @@ export async function GET(
     });
   }
 
+  const prisma = getPrismaClient();
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
   });

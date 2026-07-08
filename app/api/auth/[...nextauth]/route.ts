@@ -1,6 +1,6 @@
 import NextAuth, { type AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { prisma } from "@/lib/prisma/client";
+import { getPrismaClient } from "@/lib/prisma/client";
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -20,6 +20,7 @@ export const authOptions: AuthOptions = {
         return false;
       }
 
+      const prisma = getPrismaClient();
       await prisma.user.upsert({
         where: { email: profile.email },
         update: {

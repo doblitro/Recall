@@ -1,6 +1,6 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getActiveIntegrations, getValidAccessToken } from "@/lib/connectors/token";
-import { prisma } from "@/lib/prisma/client";
+import { getPrismaClient } from "@/lib/prisma/client";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -34,6 +34,7 @@ export function createSearchRoute<T extends object>({
       });
     }
 
+    const prisma = getPrismaClient();
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
     });
