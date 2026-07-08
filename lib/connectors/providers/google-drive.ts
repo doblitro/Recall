@@ -34,7 +34,9 @@ export const googleDriveProvider: ConnectorProvider = {
     const { tokens } = await c.getToken(code);
 
     if (!tokens.access_token) {
-      throw new Error("Google did not return an access token");
+      throw new Error(
+        `Google did not return an access token: ${JSON.stringify(tokens)}`,
+      );
     }
 
     c.setCredentials(tokens);
