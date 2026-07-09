@@ -8,9 +8,11 @@ export default async function Home() {
   const isAuthenticated = !!session;
 
   return (
-    <main>
-      <LoginButton />
-      {!!isAuthenticated && <Main />}
+    <main className="flex flex-col w-full items-center">
+      <div className="w-4/5">
+        <LoginButton />
+        {!!isAuthenticated && <Main />}
+      </div>
     </main>
   );
 }

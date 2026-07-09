@@ -55,7 +55,7 @@ const ConnectButtons = ({ type }: { type: string }) => {
           <span>{connection.accountEmail ?? label}</span>
           <button
             onClick={() => handleDisconnect(connection.id)}
-            className="px-4 py-2 text-white rounded bg-red-600 hover:bg-red-700"
+            className="rounded bg-danger px-4 py-2 text-danger-foreground hover:bg-danger-hover"
           >
             Disconnect
           </button>
@@ -63,7 +63,7 @@ const ConnectButtons = ({ type }: { type: string }) => {
       ))}
       <button
         onClick={handleConnect}
-        className="px-4 py-2 text-white rounded bg-blue-600 hover:bg-blue-700"
+        className="rounded bg-accent px-4 py-2 text-accent-foreground hover:bg-accent-hover"
       >
         {connections.length > 0
           ? `Connect another ${label}`

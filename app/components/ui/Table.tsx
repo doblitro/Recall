@@ -19,12 +19,17 @@ function Table<T extends { id?: string | null }>({
   renderDetail?: (item: T) => React.ReactNode;
 }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="table w-full">
+    <div className="overflow-x-auto rounded border border-border">
+      <table className="w-full border-collapse text-left">
         <thead>
-          <tr>
+          <tr className="border-b border-border bg-surface">
             {columns.map((column) => (
-              <th key={column.header}>{column.header}</th>
+              <th
+                key={column.header}
+                className="px-4 py-2 font-semibold text-muted-foreground"
+              >
+                {column.header}
+              </th>
             ))}
           </tr>
         </thead>
@@ -35,15 +40,21 @@ function Table<T extends { id?: string | null }>({
               <Fragment key={item.id ?? index}>
                 <tr
                   onClick={onRowClick ? () => onRowClick(item) : undefined}
-                  className={onRowClick ? "cursor-pointer" : undefined}
+                  className={`border-b border-border last:border-b-0 ${
+                    onRowClick ? "cursor-pointer hover:bg-surface-hover" : ""
+                  } ${expanded ? "bg-surface-hover" : ""}`}
                 >
                   {columns.map((column) => (
-                    <td key={column.header}>{column.render(item)}</td>
+                    <td key={column.header} className="px-4 py-2">
+                      {column.render(item)}
+                    </td>
                   ))}
                 </tr>
                 {expanded && renderDetail && (
-                  <tr>
-                    <td colSpan={columns.length}>{renderDetail(item)}</td>
+                  <tr className="border-b border-border bg-surface-hover last:border-b-0">
+                    <td colSpan={columns.length} className="px-4">
+                      {renderDetail(item)}
+                    </td>
                   </tr>
                 )}
               </Fragment>

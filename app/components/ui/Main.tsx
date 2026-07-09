@@ -22,12 +22,12 @@ const Main = () => {
         <input
           type="text"
           placeholder="Search..."
-          className="border rounded px-2 py-1"
+          className="rounded border border-border bg-surface px-2 py-1 text-foreground"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
         />
         <button
-          className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+          className="rounded bg-accent px-4 py-1 text-accent-foreground hover:bg-accent-hover"
           onClick={() => setSearchKeyword(inputValue)}
         >
           Search

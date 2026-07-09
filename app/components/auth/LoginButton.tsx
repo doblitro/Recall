@@ -11,7 +11,7 @@ const LoginButton = () => {
         <p>Welcome, {session.user?.name}!</p>
         <button
           onClick={() => signOut()}
-          className="px-4 py-2 bg-red-500 text-white rounded"
+          className="rounded bg-danger px-4 py-2 text-danger-foreground hover:bg-danger-hover"
         >
           Sign Out
         </button>
@@ -22,7 +22,7 @@ const LoginButton = () => {
   return (
     <button
       onClick={() => signIn("google", { prompt: "select_account" })}
-      className="px-4 py-2 bg-blue-600 text-white rounded"
+      className="rounded bg-accent px-4 py-2 text-accent-foreground hover:bg-accent-hover"
     >
       Sign in with Google
     </button>

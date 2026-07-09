@@ -51,7 +51,7 @@ const MessageDetail = ({
   error: string | null;
 }) => {
   if (loading) return <div className="py-2 text-sm">Loading…</div>;
-  if (error) return <div className="py-2 text-sm text-red-600">{error}</div>;
+  if (error) return <div className="py-2 text-sm text-danger">{error}</div>;
   if (!detail) return null;
 
   const { metadata } = detail;
