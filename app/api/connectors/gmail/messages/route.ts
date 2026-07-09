@@ -159,7 +159,7 @@ async function searchGmailMessages(
         integrationId: "",
         accountEmail: "",
         title: highlightKeywordInResult(
-          headers.get("Subject") ?? "(no subject)",
+          headers.get("Subject") || "(no subject)",
           keyword,
         ) as string,
         subtitle: highlightKeywordInResult(headers.get("From"), keyword),
