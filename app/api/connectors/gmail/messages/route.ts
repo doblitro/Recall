@@ -1,8 +1,22 @@
 import { GMAIL_PROVIDER_ID } from "@/lib/connectors/public";
 import { createSearchRoute } from "@/lib/connectors/search-route";
-import { GmailAttachment, GmailMessage } from "@/lib/connectors/types";
+import { buildKeywordRegex, highlightKeywordInResult } from "@/lib/connectors/highlight";
+import { parseParticipants } from "@/lib/connectors/participants";
+import { decodePartText, extractTextFromPart } from "@/lib/connectors/gmail-body";
+import { GmailListItem, GmailListMetadata } from "@/lib/connectors/types";
 
-async function gmailFetch(
+const METADATA_HEADERS = [
+  "Subject",
+  "From",
+  "To",
+  "Cc",
+  "Bcc",
+  "Date",
+  "Message-ID",
+  "Reply-To",
+];
+
+export async function gmailFetch(
   accessToken: string,
   path: string,
   params: [string, string][] = [],
@@ -34,137 +48,54 @@ async function gmailFetch(
   return data;
 }
 
-function extractAttachments(part: any): GmailAttachment[] {
-  const results: GmailAttachment[] = [];
-  if (part?.filename) {
-    results.push({ filename: part.filename, mimeType: part.mimeType });
-  }
-  for (const child of part?.parts ?? []) {
-    results.push(...extractAttachments(child));
-  }
-  return results;
+function headersMap(data: any): Map<string, string> {
+  return new Map<string, string>(
+    (data.payload?.headers ?? []).map((h: { name: string; value: string }) => [
+      h.name,
+      h.value,
+    ]),
+  );
 }
 
-async function searchGmailMessages(accessToken: string, keyword: string) {
-  const listData = await gmailFetch(accessToken, "/messages", [
-    ["q", keyword],
-    ["maxResults", "20"],
-    ["fields", "messages(id, threadId)"],
+function buildMetadata(
+  headers: Map<string, string>,
+  data: any,
+  keyword: string,
+  matchedInBody: boolean,
+): GmailListMetadata {
+  return {
+    threadId: data.threadId,
+    messageId: headers.get("Message-ID"),
+    from: parseParticipants(headers.get("From")),
+    to: parseParticipants(headers.get("To")),
+    cc: parseParticipants(headers.get("Cc")),
+    bcc: parseParticipants(headers.get("Bcc")),
+    replyTo: parseParticipants(headers.get("Reply-To")),
+    toDisplay: highlightKeywordInResult(headers.get("To"), keyword),
+    ccDisplay: highlightKeywordInResult(headers.get("Cc"), keyword),
+    bccDisplay: highlightKeywordInResult(headers.get("Bcc"), keyword),
+    replyToDisplay: highlightKeywordInResult(headers.get("Reply-To"), keyword),
+    matchedInBody,
+  };
+}
+
+async function relocateSnippetFromBody(
+  accessToken: string,
+  messageId: string,
+  keyword: string,
+  fallbackSnippet: string,
+): Promise<string | undefined> {
+  const regex = buildKeywordRegex(keyword, "i");
+  if (!regex) return highlightKeywordInResult(fallbackSnippet, keyword);
+
+  const data = await gmailFetch(accessToken, `/messages/${messageId}`, [
+    ["format", "full"],
   ]);
 
-  const messages: GmailMessage[] = listData?.messages ?? [];
-
-  return Promise.all(
-    messages.map(async (message: GmailMessage) => {
-      const data = await gmailFetch(accessToken, `/messages/${message.id}`, [
-        ["format", "full"],
-      ]);
-
-      const headers = new Map<string, string>(
-        (data.payload?.headers ?? []).map(
-          (h: { name: string; value: string }) => [h.name, h.value],
-        ),
-      );
-
-      return {
-        id: data.id,
-        snippet: getSnippetFromPayload(data, keyword),
-        subject: highlightKeywordInResult(
-          headers.get("Subject") ?? undefined,
-          keyword,
-        ),
-        from: highlightKeywordInResult(headers.get("From") ?? undefined, keyword),
-        to: highlightKeywordInResult(headers.get("To") ?? undefined, keyword),
-        date: headers.get("Date") ?? undefined,
-        attachments: extractAttachments(data.payload).map((attachment) => ({
-          ...attachment,
-          filename: highlightKeywordInResult(attachment.filename, keyword) ?? "",
-        })),
-      };
-    }),
-  );
-}
-
-export const GET = createSearchRoute({
-  providerId: GMAIL_PROVIDER_ID,
-  itemsKey: "messages",
-  notConnectedMessage: "Gmail is not connected",
-  search: searchGmailMessages,
-});
-
-function base64UrlDecode(data: string) {
-  // Gmail uses base64url: replace URL-safe characters then pad
-  const b64 = data.replace(/-/g, "+").replace(/_/g, "/");
-  const pad = b64.length % 4 === 0 ? "" : "=".repeat(4 - (b64.length % 4));
-  const str = b64 + pad;
-  try {
-    return Buffer.from(str, "base64").toString("utf8");
-  } catch (e) {
-    return "";
-  }
-}
-
-function decodeQuotedPrintable(input: string): string {
-  const stripped = input.replace(/=\r?\n/g, "");
-  const bytes: number[] = [];
-  for (let i = 0; i < stripped.length; i++) {
-    const hex = stripped.slice(i + 1, i + 3);
-    if (stripped[i] === "=" && /^[0-9A-Fa-f]{2}$/.test(hex)) {
-      bytes.push(parseInt(hex, 16));
-      i += 2;
-    } else {
-      bytes.push(stripped.charCodeAt(i));
-    }
-  }
-  return new TextDecoder("utf-8").decode(new Uint8Array(bytes));
-}
-
-function isQuotedPrintable(part: any): boolean {
-  const header = (part?.headers ?? []).find(
-    (h: { name: string; value: string }) =>
-      h.name?.toLowerCase() === "content-transfer-encoding",
-  );
-  return header?.value?.trim().toLowerCase() === "quoted-printable";
-}
-
-function decodePartText(part: any, data: string): string {
-  const decoded = base64UrlDecode(data);
-  return isQuotedPrintable(part) ? decodeQuotedPrintable(decoded) : decoded;
-}
-
-function extractTextFromPart(part: any): string[] {
-  const results: string[] = [];
-  if (!part) return results;
-  if (part.mimeType === "text/plain" && part.body?.data) {
-    results.push(decodePartText(part, part.body.data));
-  }
-  if (part.mimeType === "text/html" && part.body?.data) {
-    // crude HTML -> text
-    const html = decodePartText(part, part.body.data);
-    results.push(html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " "));
-  }
-  for (const child of part.parts ?? []) {
-    results.push(...extractTextFromPart(child));
-  }
-  return results;
-}
-
-function getSnippetFromPayload(data: any, keyword: string) {
-  const original = data?.snippet ?? "";
-  const regex = buildKeywordRegex(keyword, "i");
-  if (!regex) return highlightKeywordInResult(original, keyword);
-
-  // If original snippet already contains a keyword term, just highlight it
-  if (regex.test(original)) return highlightKeywordInResult(original, keyword);
-
-  // Otherwise, search message payload parts for the keyword
   const texts: string[] = [];
-  if (data?.payload) {
-    // payload itself can have body.data
-    if (data.payload.body?.data)
-      texts.push(decodePartText(data.payload, data.payload.body.data));
-    texts.push(...extractTextFromPart(data.payload));
-  }
+  if (data.payload?.body?.data)
+    texts.push(decodePartText(data.payload, data.payload.body.data));
+  texts.push(...extractTextFromPart(data.payload));
 
   for (const txt of texts) {
     const m = txt.match(regex);
@@ -178,40 +109,76 @@ function getSnippetFromPayload(data: any, keyword: string) {
     }
   }
 
-  // fallback to original snippet (highlight if possible)
-  return highlightKeywordInResult(original, keyword);
+  return highlightKeywordInResult(fallbackSnippet, keyword);
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-// Builds a regex matching any individual whitespace-separated term in `keyword`,
-// since Gmail's search ANDs terms that don't need to be adjacent in the text.
-function buildKeywordRegex(keyword: string, flags: string) {
-  const terms = keyword
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-
-  if (terms.length === 0) return null;
-  return new RegExp(`(${terms.join("|")})`, flags);
-}
-
-const highlightKeywordInResult = (
-  result: string | undefined,
+async function searchGmailMessages(
+  accessToken: string,
   keyword: string,
-) => {
-  if (!result) return result;
+): Promise<GmailListItem[]> {
+  const listData = await gmailFetch(accessToken, "/messages", [
+    ["q", keyword],
+    ["maxResults", "20"],
+    ["fields", "messages(id, threadId)"],
+  ]);
 
-  const escaped = escapeHtml(result);
-  const regex = buildKeywordRegex(keyword, "gi");
-  if (!regex) return escaped;
+  const messages: { id: string; threadId?: string }[] = listData?.messages ?? [];
 
-  return escaped.replace(regex, (match) => `<mark>${match}</mark>`);
-};
+  return Promise.all(
+    messages.map(async (message): Promise<GmailListItem> => {
+      const params: [string, string][] = [["format", "metadata"]];
+      for (const header of METADATA_HEADERS) params.push(["metadataHeaders", header]);
+
+      const data = await gmailFetch(accessToken, `/messages/${message.id}`, params);
+      const headers = headersMap(data);
+
+      const regex = buildKeywordRegex(keyword, "i");
+      const candidates = [
+        data.snippet ?? "",
+        headers.get("Subject") ?? "",
+        headers.get("From") ?? "",
+        headers.get("To") ?? "",
+        headers.get("Cc") ?? "",
+        headers.get("Bcc") ?? "",
+      ];
+      const matchedInHeaders = regex ? candidates.some((c) => regex.test(c)) : false;
+
+      const matchedInBody = !matchedInHeaders;
+      const preview = matchedInHeaders
+        ? highlightKeywordInResult(data.snippet ?? "", keyword)
+        : await relocateSnippetFromBody(
+            accessToken,
+            data.id,
+            keyword,
+            data.snippet ?? "",
+          );
+
+      return {
+        id: data.id,
+        provider: GMAIL_PROVIDER_ID,
+        integrationId: "",
+        accountEmail: "",
+        title: highlightKeywordInResult(
+          headers.get("Subject") ?? "(no subject)",
+          keyword,
+        ) as string,
+        subtitle: highlightKeywordInResult(headers.get("From"), keyword),
+        preview,
+        url: data.threadId
+          ? `https://mail.google.com/mail/u/0/#all/${data.threadId}`
+          : undefined,
+        updatedAt: data.internalDate
+          ? new Date(Number(data.internalDate)).toISOString()
+          : headers.get("Date"),
+        metadata: buildMetadata(headers, data, keyword, matchedInBody),
+      };
+    }),
+  );
+}
+
+export const GET = createSearchRoute({
+  providerId: GMAIL_PROVIDER_ID,
+  itemsKey: "messages",
+  notConnectedMessage: "Gmail is not connected",
+  search: searchGmailMessages,
+});
