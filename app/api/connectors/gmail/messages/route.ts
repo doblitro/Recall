@@ -1,5 +1,6 @@
 import { GMAIL_PROVIDER_ID } from "@/lib/connectors/public";
 import { createSearchRoute } from "@/lib/connectors/search-route";
+import { GmailAttachment, GmailMessage } from "@/lib/connectors/types";
 
 async function gmailFetch(
   accessToken: string,
@@ -33,6 +34,17 @@ async function gmailFetch(
   return data;
 }
 
+function extractAttachments(part: any): GmailAttachment[] {
+  const results: GmailAttachment[] = [];
+  if (part?.filename) {
+    results.push({ filename: part.filename, mimeType: part.mimeType });
+  }
+  for (const child of part?.parts ?? []) {
+    results.push(...extractAttachments(child));
+  }
+  return results;
+}
+
 async function searchGmailMessages(accessToken: string, keyword: string) {
   const listData = await gmailFetch(accessToken, "/messages", [
     ["q", keyword],
@@ -40,15 +52,12 @@ async function searchGmailMessages(accessToken: string, keyword: string) {
     ["fields", "messages(id, threadId)"],
   ]);
 
-  const messages: { id: string }[] = listData.messages ?? [];
+  const messages: GmailMessage[] = listData?.messages ?? [];
 
   return Promise.all(
-    messages.map(async (message) => {
+    messages.map(async (message: GmailMessage) => {
       const data = await gmailFetch(accessToken, `/messages/${message.id}`, [
-        ["format", "metadata"],
-        ["metadataHeaders", "Subject"],
-        ["metadataHeaders", "From"],
-        ["metadataHeaders", "Date"],
+        ["format", "full"],
       ]);
 
       const headers = new Map<string, string>(
@@ -63,6 +72,7 @@ async function searchGmailMessages(accessToken: string, keyword: string) {
         subject: headers.get("Subject") ?? undefined,
         from: headers.get("From") ?? undefined,
         date: headers.get("Date") ?? undefined,
+        attachments: extractAttachments(data.payload),
       };
     }),
   );
@@ -74,3 +84,5 @@ export const GET = createSearchRoute({
   notConnectedMessage: "Gmail is not connected",
   search: searchGmailMessages,
 });
+
+const highlightKeywordInSnippet = () => {};

@@ -3,6 +3,7 @@
 import Table, { Column } from "../ui/Table";
 import { GMAIL_PROVIDER_ID } from "@/lib/connectors/public";
 import useConnectorSearch from "@/app/hooks/useConnectorSearch";
+import { GmailAttachment } from "@/lib/connectors/types";
 
 export type GmailMessage = {
   id?: string | null;
@@ -11,6 +12,7 @@ export type GmailMessage = {
   from?: string;
   date?: string;
   accountEmail?: string;
+  attachments?: { filename: string; mimeType?: string }[];
 };
 
 const columns: Column<GmailMessage>[] = [
@@ -29,6 +31,13 @@ const columns: Column<GmailMessage>[] = [
   {
     header: "Snippet",
     render: (message) => message.snippet,
+  },
+  {
+    header: "Attachments",
+    render: (message) =>
+      message.attachments?.length
+        ? message.attachments.map((a: GmailAttachment) => a.filename).join(", ")
+        : undefined,
   },
   {
     header: "Date",

@@ -23,3 +23,7 @@ export interface ConnectorProvider {
   refreshAccessToken(refreshToken: string): Promise<RefreshedTokens>;
   revoke(accessToken: string): Promise<void>;
 }
+
+export type GmailAttachment = { filename: string; mimeType?: string };
+
+export type GmailMessage = { id: string };
