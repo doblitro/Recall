@@ -10,6 +10,7 @@ export type GmailMessage = {
   snippet?: string | null;
   subject?: string;
   from?: string;
+  to?: string;
   date?: string;
   accountEmail?: string;
   attachments?: { filename: string; mimeType?: string }[];
@@ -22,22 +23,43 @@ const columns: Column<GmailMessage>[] = [
   },
   {
     header: "Subject",
-    render: (message) => message.subject || "(no subject)",
+    render: (message) => (
+      <div
+        dangerouslySetInnerHTML={{ __html: message.subject || "(no subject)" }}
+      />
+    ),
   },
   {
     header: "From",
-    render: (message) => message.from,
+    render: (message) => (
+      <div dangerouslySetInnerHTML={{ __html: message.from ?? "" }} />
+    ),
+  },
+  {
+    header: "To",
+    render: (message) => (
+      <div dangerouslySetInnerHTML={{ __html: message.to ?? "" }} />
+    ),
   },
   {
     header: "Snippet",
-    render: (message) => message.snippet,
+    render: (message) => (
+      <div dangerouslySetInnerHTML={{ __html: message.snippet ?? "" }} />
+    ),
   },
   {
     header: "Attachments",
     render: (message) =>
-      message.attachments?.length
-        ? message.attachments.map((a: GmailAttachment) => a.filename).join(", ")
-        : undefined,
+      message.attachments?.length ? (
+        <>
+          {message.attachments.map((a: GmailAttachment, index: number) => (
+            <span key={index}>
+              {index > 0 && ", "}
+              <span dangerouslySetInnerHTML={{ __html: a.filename }} />
+            </span>
+          ))}
+        </>
+      ) : undefined,
   },
   {
     header: "Date",
