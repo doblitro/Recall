@@ -11,7 +11,8 @@ const geist = Geist({
 });
 
 const title = "Recall";
-const description = "Search everything you've ever connected.";
+const description =
+  "Instant search across your entire workspace. Find emails, files, documents, issues, and notes from all your connected apps in one place.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://recall.juliennepanes.workers.dev"),
