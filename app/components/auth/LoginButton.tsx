@@ -7,8 +7,8 @@ const LoginButton = () => {
 
   if (session) {
     return (
-      <div className="flex flex-col items-center gap-2">
-        <p>Welcome, {session.user?.name}!</p>
+      <div className="flex flex-col items-center gap-2 whitespace-no-wrap">
+        <p>{session.user?.name}</p>
         <button
           onClick={() => signOut()}
           className="rounded bg-danger px-4 py-2 text-danger-foreground hover:bg-danger-hover"
