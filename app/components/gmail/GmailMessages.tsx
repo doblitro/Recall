@@ -14,9 +14,14 @@ const columns: Column<GmailListItem>[] = [
   },
   {
     header: "Subject",
-    render: (message) => (
-      <div dangerouslySetInnerHTML={{ __html: message.title }} />
-    ),
+    render: (message) =>
+      message.url ? (
+        <a href={message.url} target="_blank" rel="noopener noreferrer">
+          <span dangerouslySetInnerHTML={{ __html: message.title }} />
+        </a>
+      ) : (
+        <span dangerouslySetInnerHTML={{ __html: message.title }} />
+      ),
   },
   {
     header: "From",
