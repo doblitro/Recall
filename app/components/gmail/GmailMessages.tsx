@@ -112,8 +112,13 @@ const GmailMessages = ({ searchKeyword }: { searchKeyword: string }) => {
   );
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const { data: detail, loading, error, fetchDetail, reset } =
-    useConnectorDetail<GmailDetailItem>("message");
+  const {
+    data: detail,
+    loading,
+    error,
+    fetchDetail,
+    reset,
+  } = useConnectorDetail<GmailDetailItem>("message");
 
   const handleRowClick = (message: GmailListItem) => {
     if (expandedId === message.id) {
@@ -138,11 +143,7 @@ const GmailMessages = ({ searchKeyword }: { searchKeyword: string }) => {
         onRowClick={handleRowClick}
         renderDetail={(message) =>
           message.id === expandedId ? (
-            <MessageDetail
-              detail={detail}
-              loading={loading}
-              error={error}
-            />
+            <MessageDetail detail={detail} loading={loading} error={error} />
           ) : null
         }
       />

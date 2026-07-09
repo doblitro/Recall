@@ -3,7 +3,6 @@ import { createDetailRoute } from "@/lib/connectors/search-route";
 import { highlightKeywordInResult } from "@/lib/connectors/highlight";
 import { parseParticipants } from "@/lib/connectors/participants";
 import {
-  decodePartText,
   extractAttachments,
   extractTextFromPart,
 } from "@/lib/connectors/gmail-body";
@@ -26,10 +25,7 @@ async function fetchGmailMessageDetail(
     ]),
   );
 
-  const texts: string[] = [];
-  if (data.payload?.body?.data)
-    texts.push(decodePartText(data.payload, data.payload.body.data));
-  texts.push(...extractTextFromPart(data.payload));
+  const texts = extractTextFromPart(data.payload);
   const bodyText = texts.join("\n\n");
 
   const attachments = extractAttachments(data.payload).map((attachment) => ({
