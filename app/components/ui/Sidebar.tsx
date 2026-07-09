@@ -37,7 +37,7 @@ const Sidebar = () => {
   if (status === "unauthenticated") {
     return (
       <div className="relative shrink-0">
-        <aside className="sticky top-0 h-screen flex flex-col justify-between bg-accent-foreground border-r border-border z-2 shadow-sm w-64 p-4">
+        <aside className="sticky top-0 h-screen flex flex-col justify-between bg-accent-foreground border-r border-border z-2 shadow-sm w-full p-4">
           <div className="flex flex-col gap-4">
             <BrandTypeface showDescription />
             <LoginButton />
@@ -67,7 +67,7 @@ const Sidebar = () => {
           isOpen ? "w-64 p-4" : "w-0 p-0 border-r-0"
         }`}
       >
-        <div className="w-64 flex flex-col justify-between h-full">
+        <div className="w-full flex flex-col justify-between h-full">
           <BrandTypeface showDescription />
           <div className="flex flex-col gap-2">
             <button
