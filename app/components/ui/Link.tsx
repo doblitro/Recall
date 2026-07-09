@@ -25,7 +25,7 @@ const Link = ({
     >
       <span className="whitespace-nowrap">{children}</span>
       {showIcon && (
-        <ExternalLinkIcon width={10} height={10} className="shrink-0" />
+        <ExternalLinkIcon width={12} height={12} className="shrink-0" />
       )}
     </a>
   );
