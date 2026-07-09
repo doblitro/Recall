@@ -6,6 +6,7 @@ import { GMAIL_PROVIDER_ID } from "@/lib/connectors/public";
 import useConnectorSearch from "@/app/hooks/useConnectorSearch";
 import useConnectorDetail from "@/app/hooks/useConnectorDetail";
 import { GmailListItem, GmailDetailItem } from "@/lib/connectors/types";
+import Link from "../ui/Link";
 
 const columns: Column<GmailListItem>[] = [
   {
@@ -16,9 +17,14 @@ const columns: Column<GmailListItem>[] = [
     header: "Subject",
     render: (message) =>
       message.url ? (
-        <a href={message.url} target="_blank" rel="noopener noreferrer">
+        <Link
+          href={message.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          showIcon
+        >
           <span dangerouslySetInnerHTML={{ __html: message.title }} />
-        </a>
+        </Link>
       ) : (
         <span dangerouslySetInnerHTML={{ __html: message.title }} />
       ),

@@ -6,6 +6,7 @@ import { GOOGLE_DRIVE_PROVIDER_ID } from "@/lib/connectors/public";
 import useConnectorSearch from "@/app/hooks/useConnectorSearch";
 import useConnectorDetail from "@/app/hooks/useConnectorDetail";
 import { DriveListItem, DriveDetailItem } from "@/lib/connectors/types";
+import Link from "../ui/Link";
 
 const columns: Column<DriveListItem>[] = [
   {
@@ -16,9 +17,14 @@ const columns: Column<DriveListItem>[] = [
     header: "File Name",
     render: (file) =>
       file.url ? (
-        <a href={file.url} target="_blank" rel="noopener noreferrer">
+        <Link
+          href={file.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          showIcon
+        >
           <span dangerouslySetInnerHTML={{ __html: file.title }} />
-        </a>
+        </Link>
       ) : (
         <span dangerouslySetInnerHTML={{ __html: file.title }} />
       ),
@@ -84,8 +90,13 @@ const DriveFiles = ({ searchKeyword }: { searchKeyword: string }) => {
   );
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const { data: detail, loading, error, fetchDetail, reset } =
-    useConnectorDetail<DriveDetailItem>("file");
+  const {
+    data: detail,
+    loading,
+    error,
+    fetchDetail,
+    reset,
+  } = useConnectorDetail<DriveDetailItem>("file");
 
   const handleRowClick = (file: DriveListItem) => {
     if (expandedId === file.id) {
