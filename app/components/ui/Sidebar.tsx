@@ -34,6 +34,19 @@ const Sidebar = () => {
 
   if (status === "loading") return <p>Checking session...</p>;
 
+  if (status === "unauthenticated") {
+    return (
+      <div className="relative shrink-0">
+        <aside className="sticky top-0 h-screen flex flex-col justify-between bg-accent-foreground border-r border-border z-2 shadow-sm w-64 p-4">
+          <div className="flex flex-col gap-4">
+            <BrandTypeface showDescription />
+            <LoginButton />
+          </div>
+        </aside>
+      </div>
+    );
+  }
+
   return (
     <div className="relative shrink-0">
       <button
