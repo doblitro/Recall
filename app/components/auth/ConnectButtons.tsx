@@ -2,6 +2,7 @@
 
 import useConnections from "@/app/hooks/useConnections";
 import { CONNECTOR_LIST } from "@/lib/connectors/public";
+import { LogOut, PlusIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 const ConnectButtons = ({ type }: { type: string }) => {
@@ -49,25 +50,23 @@ const ConnectButtons = ({ type }: { type: string }) => {
   };
 
   return (
-    <div className="flex flex-col gap-2 items-center">
+    <div className="flex w-full flex-col gap-2 items-stretch">
       {connections.map((connection) => (
-        <div key={connection.id} className="flex items-center gap-2">
-          <span>{connection.accountEmail ?? label}</span>
+        <div key={connection.id} className="w-full">
           <button
             onClick={() => handleDisconnect(connection.id)}
-            className="rounded bg-danger px-4 py-2 text-danger-foreground hover:bg-danger-hover"
+            className="flex w-full items-center justify-between gap-2 rounded bg-danger px-4 py-2 text-danger-foreground whitespace-nowrap hover:bg-danger-hover"
           >
-            Disconnect
+            <span className="truncate">{connection.accountEmail ?? label}</span>
+            <LogOut className="rotate-180 w-3 h-3 shrink-0" />
           </button>
         </div>
       ))}
       <button
         onClick={handleConnect}
-        className="rounded bg-accent px-4 py-2 text-accent-foreground hover:bg-accent-hover"
+        className="flex w-full items-center justify-center rounded bg-accent px-4 py-2 text-accent-foreground hover:bg-accent-hover"
       >
-        {connections.length > 0
-          ? `Connect another ${label}`
-          : `Connect to ${label}`}
+        <PlusIcon />
       </button>
     </div>
   );

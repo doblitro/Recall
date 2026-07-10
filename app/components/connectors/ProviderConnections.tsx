@@ -5,9 +5,12 @@ import ConnectButtons from "../auth/ConnectButtons";
 
 const ProviderConnections = () => {
   return (
-    <div className="flex flex-col gap-6 items-center">
+    <div className="flex w-full flex-col gap-6">
       {CONNECTOR_LIST.map((connector) => (
-        <div key={connector.id} className="flex flex-col items-center gap-2">
+        <div
+          key={connector.id}
+          className="flex w-full flex-col items-stretch gap-2"
+        >
           <h3 className="font-semibold">{connector.label}</h3>
           <ConnectButtons type={connector.id} />
         </div>
