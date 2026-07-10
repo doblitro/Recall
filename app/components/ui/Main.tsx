@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   GOOGLE_DRIVE_PROVIDER_ID,
   GMAIL_PROVIDER_ID,
@@ -11,7 +11,6 @@ import GmailMessages from "../gmail/GmailMessages";
 import { useSearchFilter } from "@/app/providers/SearchFilterProvider";
 import FilterRow from "./FilterRow";
 import { useDebouncedValue } from "@tanstack/react-pacer";
-import { Loader } from "lucide-react";
 
 const Main = () => {
   const [inputValue, setInputValue] = useState("");
@@ -24,6 +23,23 @@ const Main = () => {
 
   const isSearching = debouncer.state.isPending;
 
+  const [counts, setCounts] = useState<Partial<Record<string, number>>>({});
+  const [loadingByProvider, setLoadingByProvider] = useState<
+    Partial<Record<string, boolean>>
+  >({});
+
+  const handleDriveCount = useCallback((count: number, isFetching: boolean) => {
+    setCounts((c) => ({ ...c, [GOOGLE_DRIVE_PROVIDER_ID]: count }));
+    setLoadingByProvider((l) => ({
+      ...l,
+      [GOOGLE_DRIVE_PROVIDER_ID]: isFetching,
+    }));
+  }, []);
+  const handleGmailCount = useCallback((count: number, isFetching: boolean) => {
+    setCounts((c) => ({ ...c, [GMAIL_PROVIDER_ID]: count }));
+    setLoadingByProvider((l) => ({ ...l, [GMAIL_PROVIDER_ID]: isFetching }));
+  }, []);
+
   return (
     <div className="flex flex-col items-center min-h-screen py-2 px-4 gap-6 w-full md:w-3/4">
       <div className="flex flex-col gap-2">
@@ -35,17 +51,13 @@ const Main = () => {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />
-          {isSearching && (
-            <Loader
-              className="size-4 animate-spin text-muted-foreground absolute -right-6"
-              aria-label="Searching"
-              role="status"
-            />
-          )}
         </div>
         <FilterRow
           activeProvider={activeProvider}
           setActiveProvider={setActiveProvider}
+          counts={searchKeyword ? counts : undefined}
+          isSearching={isSearching}
+          loadingByProvider={loadingByProvider}
         />
       </div>
 
@@ -56,14 +68,20 @@ const Main = () => {
           activeProvider !== null && activeProvider !== GOOGLE_DRIVE_PROVIDER_ID
         }
       >
-        <DriveFiles searchKeyword={searchKeyword} />
+        <DriveFiles
+          searchKeyword={searchKeyword}
+          onCountChange={handleDriveCount}
+        />
       </ConnectorResults>
       <ConnectorResults
         providerId={GMAIL_PROVIDER_ID}
         heading="Gmail Messages"
         hidden={activeProvider !== null && activeProvider !== GMAIL_PROVIDER_ID}
       >
-        <GmailMessages searchKeyword={searchKeyword} />
+        <GmailMessages
+          searchKeyword={searchKeyword}
+          onCountChange={handleGmailCount}
+        />
       </ConnectorResults>
     </div>
   );
