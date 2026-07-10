@@ -40,23 +40,22 @@ const Main = () => {
         />
       </div>
 
-      {(activeProvider === null ||
-        activeProvider === GOOGLE_DRIVE_PROVIDER_ID) && (
-        <ConnectorResults
-          providerId={GOOGLE_DRIVE_PROVIDER_ID}
-          heading="Google Drive Files"
-        >
-          <DriveFiles searchKeyword={searchKeyword} />
-        </ConnectorResults>
-      )}
-      {(activeProvider === null || activeProvider === GMAIL_PROVIDER_ID) && (
-        <ConnectorResults
-          providerId={GMAIL_PROVIDER_ID}
-          heading="Gmail Messages"
-        >
-          <GmailMessages searchKeyword={searchKeyword} />
-        </ConnectorResults>
-      )}
+      <ConnectorResults
+        providerId={GOOGLE_DRIVE_PROVIDER_ID}
+        heading="Google Drive Files"
+        hidden={
+          activeProvider !== null && activeProvider !== GOOGLE_DRIVE_PROVIDER_ID
+        }
+      >
+        <DriveFiles searchKeyword={searchKeyword} />
+      </ConnectorResults>
+      <ConnectorResults
+        providerId={GMAIL_PROVIDER_ID}
+        heading="Gmail Messages"
+        hidden={activeProvider !== null && activeProvider !== GMAIL_PROVIDER_ID}
+      >
+        <GmailMessages searchKeyword={searchKeyword} />
+      </ConnectorResults>
     </div>
   );
 };

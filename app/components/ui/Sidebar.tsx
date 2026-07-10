@@ -2,10 +2,8 @@
 
 import LoginButton from "../auth/LoginButton";
 import { useSession } from "next-auth/react";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { useSearchFilter } from "@/app/providers/SearchFilterProvider";
 import { BrandTypeface } from "./Brand";
 import ProviderConnections from "../connectors/ProviderConnections";
 
@@ -13,9 +11,6 @@ const SIDEBAR_OPEN_STORAGE_KEY = "sidebar:isOpen";
 
 const Sidebar = () => {
   const { status } = useSession();
-  const { activeProvider, setActiveProvider } = useSearchFilter();
-  const pathname = usePathname();
-  const isConnectionsPage = pathname === "/connections";
   const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {

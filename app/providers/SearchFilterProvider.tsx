@@ -1,7 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { createContext, useContext, useState } from "react";
 
 export type ProviderFilter = string | null;
 
@@ -14,43 +13,17 @@ const SearchFilterContext = createContext<SearchFilterContextValue | null>(
   null,
 );
 
-function SearchFilterProviderInner({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const activeProvider = searchParams.get("provider");
-
-  const setActiveProvider = useCallback(
-    (id: ProviderFilter) => {
-      const params = new URLSearchParams();
-      if (id !== null) {
-        params.set("provider", id);
-      }
-      const query = params.toString();
-      router.push(query ? `/?${query}` : "/");
-    },
-    [router],
-  );
-
-  return (
-    <SearchFilterContext.Provider value={{ activeProvider, setActiveProvider }}>
-      {children}
-    </SearchFilterContext.Provider>
-  );
-}
-
 export function SearchFilterProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [activeProvider, setActiveProvider] = useState<ProviderFilter>(null);
+
   return (
-    <Suspense fallback={null}>
-      <SearchFilterProviderInner>{children}</SearchFilterProviderInner>
-    </Suspense>
+    <SearchFilterContext.Provider value={{ activeProvider, setActiveProvider }}>
+      {children}
+    </SearchFilterContext.Provider>
   );
 }
 
