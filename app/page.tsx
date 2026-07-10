@@ -24,10 +24,18 @@ export default async function Home() {
           </div>
         </>
       ) : (
-        <div className="flex h-fit w-fit flex-col gap-4">
-          <BrandTypeface showDescription />
-          <ChangingText />
-          <LoginButton />
+        <div className="flex h-screen items-center justify-center px-6">
+          <div className="flex max-w-lg flex-col items-center text-center">
+            <BrandTypeface showDescription />
+
+            <div className="mt-8">
+              <ChangingText />
+            </div>
+
+            <div className="mt-10">
+              <LoginButton />
+            </div>
+          </div>
         </div>
       )}
     </div>

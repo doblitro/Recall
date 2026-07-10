@@ -1,16 +1,17 @@
-export const BrandTypeface = ({
-  showDescription,
-}: {
+type BrandTypefaceProps = {
   showDescription?: boolean;
-}) => {
+};
+
+export function BrandTypeface({ showDescription = false }: BrandTypefaceProps) {
   return (
-    <div>
-      <h1 className="text-foreground text-4xl font-bold">Recall</h1>
+    <div className="space-y-3">
+      <h1 className="text-4xl font-semibold tracking-tight">Recall</h1>
+
       {showDescription && (
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground max-w-sm text-base leading-7">
           Instant search across your entire workspace.
         </p>
       )}
     </div>
   );
-};
+}

@@ -6,7 +6,7 @@ import { TypeAnimation } from "react-type-animation";
 const ChangingText = () => {
   return (
     <span>
-      Find something from{" "}
+      Search{" "}
       <TypeAnimation
         sequence={CONNECTOR_LIST.flatMap((c) => [c.label, 2500])}
         speed={50}

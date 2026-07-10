@@ -2,28 +2,44 @@
 
 import LoginButton from "../auth/LoginButton";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { BrandTypeface } from "./Brand";
 import ProviderConnections from "../connectors/ProviderConnections";
 
 const SIDEBAR_OPEN_STORAGE_KEY = "sidebar:isOpen";
+const sidebarListeners = new Set<() => void>();
+
+function subscribeToSidebarOpen(callback: () => void) {
+  sidebarListeners.add(callback);
+  return () => sidebarListeners.delete(callback);
+}
+
+function getSidebarOpenSnapshot() {
+  const stored = localStorage.getItem(SIDEBAR_OPEN_STORAGE_KEY);
+  if (stored !== null) return stored === "true";
+  return window.innerWidth >= 768;
+}
+
+function getSidebarOpenServerSnapshot() {
+  return true;
+}
+
+function setSidebarOpen(value: boolean) {
+  localStorage.setItem(SIDEBAR_OPEN_STORAGE_KEY, String(value));
+  sidebarListeners.forEach((listener) => listener());
+}
 
 const Sidebar = () => {
   const { status } = useSession();
-  const [isOpen, setIsOpen] = useState(() => {
-    if (typeof window === "undefined") return true;
-    const stored = localStorage.getItem(SIDEBAR_OPEN_STORAGE_KEY);
-    if (stored !== null) return stored === "true";
-    return window.innerWidth >= 768;
-  });
+  const isOpen = useSyncExternalStore(
+    subscribeToSidebarOpen,
+    getSidebarOpenSnapshot,
+    getSidebarOpenServerSnapshot,
+  );
 
   const toggleOpen = () => {
-    setIsOpen((open) => {
-      const next = !open;
-      localStorage.setItem(SIDEBAR_OPEN_STORAGE_KEY, String(next));
-      return next;
-    });
+    setSidebarOpen(!isOpen);
   };
 
   if (status === "unauthenticated") {
@@ -48,21 +64,23 @@ const Sidebar = () => {
           aria-hidden="true"
         />
       )}
+      {/* Collapse button */}
       <button
         onClick={toggleOpen}
         aria-expanded={isOpen}
         aria-label={isOpen ? "Hide sidebar" : "Show sidebar"}
         title={isOpen ? "Hide sidebar" : "Show sidebar"}
-        className={`border-border bg-accent-foreground hover:bg-accent-hover fixed top-4 z-50 flex h-6 w-6 items-center justify-center rounded-full border shadow-sm transition-[left] duration-200 md:absolute md:z-10 ${
-          isOpen ? "left-60 md:-right-8 md:left-auto" : "left-2 md:-right-8"
+        className={`border-border bg-accent-foreground hover:bg-accent-hover fixed top-4 z-50 flex h-9 w-9 items-center justify-center rounded-xl border shadow-sm transition-[left] duration-200 md:absolute md:z-10 ${
+          isOpen ? "left-60 md:-right-5 md:left-auto" : "left-2 md:-right-8"
         }`}
       >
         {isOpen ? (
-          <ChevronLeftIcon width={14} height={14} />
+          <ChevronLeftIcon width={20} height={20} />
         ) : (
-          <ChevronRightIcon width={14} height={14} />
+          <ChevronRightIcon width={20} height={20} />
         )}
       </button>
+
       <aside
         className={`bg-accent-foreground border-border fixed top-0 left-0 z-40 flex h-dvh flex-col justify-between overflow-hidden border-r shadow-sm transition-all duration-200 md:static md:z-2 md:h-full ${
           isOpen
