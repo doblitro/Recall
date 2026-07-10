@@ -9,28 +9,35 @@ import ConnectorResults from "../connectors/ConnectorResults";
 import DriveFiles from "../drive/DriveFiles";
 import GmailMessages from "../gmail/GmailMessages";
 import { useSearchFilter } from "@/app/providers/SearchFilterProvider";
+import FilterRow from "./FilterRow";
 
 const Main = () => {
   const [inputValue, setInputValue] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
-  const { activeProvider } = useSearchFilter();
+  const { activeProvider, setActiveProvider } = useSearchFilter();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2 gap-6 w-4/5">
-      <div className="flex gap-2">
-        <input
-          type="text"
-          placeholder="Search..."
-          className="rounded border border-border bg-surface px-2 py-1 text-foreground"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Search..."
+            className="rounded border border-border bg-surface px-2 py-1 text-foreground"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+          />
+          <button
+            className="rounded bg-accent px-4 py-1 text-accent-foreground hover:bg-accent-hover"
+            onClick={() => setSearchKeyword(inputValue)}
+          >
+            Search
+          </button>
+        </div>
+        <FilterRow
+          activeProvider={activeProvider}
+          setActiveProvider={setActiveProvider}
         />
-        <button
-          className="rounded bg-accent px-4 py-1 text-accent-foreground hover:bg-accent-hover"
-          onClick={() => setSearchKeyword(inputValue)}
-        >
-          Search
-        </button>
       </div>
 
       {(activeProvider === null ||

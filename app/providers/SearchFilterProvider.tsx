@@ -3,16 +3,22 @@
 import { createContext, useCallback, useContext, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-type ProviderFilter = string | null;
+export type ProviderFilter = string | null;
 
 interface SearchFilterContextValue {
   activeProvider: ProviderFilter;
   setActiveProvider: (id: ProviderFilter) => void;
 }
 
-const SearchFilterContext = createContext<SearchFilterContextValue | null>(null);
+const SearchFilterContext = createContext<SearchFilterContextValue | null>(
+  null,
+);
 
-function SearchFilterProviderInner({ children }: { children: React.ReactNode }) {
+function SearchFilterProviderInner({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeProvider = searchParams.get("provider");
@@ -36,7 +42,11 @@ function SearchFilterProviderInner({ children }: { children: React.ReactNode }) 
   );
 }
 
-export function SearchFilterProvider({ children }: { children: React.ReactNode }) {
+export function SearchFilterProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <Suspense fallback={null}>
       <SearchFilterProviderInner>{children}</SearchFilterProviderInner>
@@ -47,7 +57,9 @@ export function SearchFilterProvider({ children }: { children: React.ReactNode }
 export function useSearchFilter() {
   const context = useContext(SearchFilterContext);
   if (!context) {
-    throw new Error("useSearchFilter must be used within a SearchFilterProvider");
+    throw new Error(
+      "useSearchFilter must be used within a SearchFilterProvider",
+    );
   }
   return context;
 }

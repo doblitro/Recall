@@ -1,14 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import LoginButton from "../auth/LoginButton";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { CONNECTOR_LIST } from "@/lib/connectors/public";
 import { useSearchFilter } from "@/app/providers/SearchFilterProvider";
 import { BrandTypeface } from "./Brand";
+import ProviderConnections from "../connectors/ProviderConnections";
 
 const SIDEBAR_OPEN_STORAGE_KEY = "sidebar:isOpen";
 
@@ -69,41 +68,7 @@ const Sidebar = () => {
       >
         <div className="w-full flex flex-col justify-between h-full">
           <BrandTypeface showDescription />
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => setActiveProvider(null)}
-              className={
-                !isConnectionsPage && activeProvider === null
-                  ? "rounded bg-accent px-4 py-2 text-accent-foreground"
-                  : "rounded px-4 py-2 hover:bg-accent-hover"
-              }
-            >
-              Unified Search
-            </button>
-            {CONNECTOR_LIST.map((connector) => (
-              <button
-                key={connector.id}
-                onClick={() => setActiveProvider(connector.id)}
-                className={
-                  !isConnectionsPage && activeProvider === connector.id
-                    ? "rounded bg-accent px-4 py-2 text-accent-foreground"
-                    : "rounded px-4 py-2 hover:bg-accent-hover"
-                }
-              >
-                {connector.label}
-              </button>
-            ))}
-            <Link
-              href="/connections"
-              className={
-                isConnectionsPage
-                  ? "flex items-center justify-between rounded bg-accent px-4 py-2 text-accent-foreground"
-                  : "flex items-center justify-between rounded px-4 py-2 hover:bg-accent-hover"
-              }
-            >
-              Manage Connections
-            </Link>
-          </div>
+          <ProviderConnections />
           <LoginButton />
         </div>
       </aside>

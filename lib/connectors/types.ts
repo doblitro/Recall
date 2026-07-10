@@ -13,6 +13,11 @@ export interface RefreshedTokens {
   expiresAt: Date | null;
 }
 
+export interface Connector {
+  id: string;
+  label: string;
+}
+
 export interface ConnectorProvider {
   id: string;
   label: string;
