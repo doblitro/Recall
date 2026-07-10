@@ -2,19 +2,34 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]/route";
 import Main from "./components/ui/Main";
 import Sidebar from "./components/ui/Sidebar";
+import { BrandTypeface } from "./components/ui/Brand";
+import LoginButton from "./components/auth/LoginButton";
+import ChangingText from "./components/ui/ChangingText";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
   const isAuthenticated = !!session;
 
   return (
-    <div className="flex w-full overflow-x-hidden h-dvh">
-      <Sidebar />
-      <div className="flex-1 overflow-y-auto min-h-0">
-        <main className="max-w-[90%] lg:max-w-4/5 mx-auto">
-          {!!isAuthenticated && <Main />}
-        </main>
-      </div>
+    <div
+      className={`flex h-dvh w-full overflow-x-hidden ${!session && "items-center justify-center"}`}
+    >
+      {session ? (
+        <>
+          <Sidebar />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <main className="mx-auto max-w-[90%] lg:max-w-4/5">
+              {!!isAuthenticated && <Main />}
+            </main>
+          </div>
+        </>
+      ) : (
+        <div className="flex h-fit w-fit flex-col gap-4">
+          <BrandTypeface showDescription />
+          <ChangingText />
+          <LoginButton />
+        </div>
+      )}
     </div>
   );
 }
