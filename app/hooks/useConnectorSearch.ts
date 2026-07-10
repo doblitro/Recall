@@ -1,42 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 const useConnectorSearch = <T,>(
   endpoint: string,
   itemsKey: string,
   searchKeyword: string,
 ) => {
-  const [items, setItems] = useState<T[]>([]);
+  const { data } = useQuery({
+    queryKey: [endpoint, itemsKey, searchKeyword],
+    queryFn: async () => {
+      const response = await fetch(`${endpoint}?keyword=${searchKeyword}`);
+      if (!response.ok) throw new Error(`Failed to fetch ${itemsKey}`);
+      const data = await response.json();
+      return (data[itemsKey] || []) as T[];
+    },
+    enabled: !!searchKeyword,
+  });
 
-  useEffect(() => {
-    if (!searchKeyword) {
-      setItems([]);
-      return;
-    }
-
-    let cancelled = false;
-
-    const fetchItems = async () => {
-      try {
-        const response = await fetch(`${endpoint}?keyword=${searchKeyword}`);
-        if (!response.ok) throw new Error(`Failed to fetch ${itemsKey}`);
-        const data = await response.json();
-        if (!cancelled) setItems(data[itemsKey] || []);
-      } catch (error) {
-        console.error(`Error fetching ${itemsKey}:`, error);
-        if (!cancelled) setItems([]);
-      }
-    };
-
-    fetchItems();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [endpoint, itemsKey, searchKeyword]);
-
-  return items;
+  return data ?? [];
 };
 
 export default useConnectorSearch;
