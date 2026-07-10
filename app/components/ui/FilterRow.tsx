@@ -2,15 +2,18 @@ import { Loader } from "lucide-react";
 import { ProviderFilter } from "@/app/providers/SearchFilterProvider";
 import { CONNECTOR_LIST } from "@/lib/connectors/public";
 import { Connector } from "@/lib/connectors/types";
+import Image from "next/image";
 
 const FilterButton = ({
   label,
+  image,
   count,
   loading,
   onClick,
   isActive,
 }: {
   label: string;
+  image?: string | undefined;
   count?: number;
   loading?: boolean;
   onClick: () => any;
@@ -21,8 +24,11 @@ const FilterButton = ({
   return (
     <button
       onClick={onClick}
-      className={`px-2 py-1 rounded text-foreground flex items-center hover:cursor-pointer ${isActive && activeButton}`}
+      className={`px-2 py-1 rounded-xl text-foreground flex items-center gap-1.5 hover:cursor-pointer ${isActive && activeButton}`}
     >
+      {image && (
+        <Image src={image} alt={`${label} Logo`} width={20} height={20} />
+      )}
       {label}
       {loading ? (
         <Loader
@@ -31,7 +37,7 @@ const FilterButton = ({
           role="status"
         />
       ) : (
-        count !== undefined && <span className="text-xs mx-2">{count}</span>
+        count !== undefined && <span className="text-xs ml-0.5">{count}</span>
       )}
     </button>
   );
@@ -71,6 +77,7 @@ const FilterRow = ({
           key={c.id}
           label={c.label}
           count={counts?.[c.id]}
+          image={c.image ? c.image : undefined}
           loading={isSearching || loadingByProvider?.[c.id]}
           onClick={() => setActiveProvider(c.id)}
           isActive={activeProvider === c.id}

@@ -16,6 +16,7 @@ export interface RefreshedTokens {
 export interface Connector {
   id: string;
   label: string;
+  image: string;
 }
 
 export interface ConnectorProvider {
