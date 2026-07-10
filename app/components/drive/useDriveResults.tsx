@@ -1,21 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import ResultCard from "../ui/ResultCard";
 import { GOOGLE_DRIVE_PROVIDER_ID } from "@/lib/connectors/public";
 import useConnectorSearch from "@/app/hooks/useConnectorSearch";
 import useConnectorDetail from "@/app/hooks/useConnectorDetail";
+import useConnections from "@/app/hooks/useConnections";
 import { DriveListItem, DriveDetailItem } from "@/lib/connectors/types";
-import Link from "../ui/Link";
-
-const renderTitle = (file: DriveListItem) =>
-  file.url ? (
-    <Link href={file.url} target="_blank" rel="noopener noreferrer" showIcon>
-      <span dangerouslySetInnerHTML={{ __html: file.title }} />
-    </Link>
-  ) : (
-    <span dangerouslySetInnerHTML={{ __html: file.title }} />
-  );
+import LinkedTitle from "../ui/LinkedTitle";
+import { MergedResultItem } from "../results/types";
 
 const FileDetail = ({
   detail,
@@ -60,22 +53,15 @@ const FileDetail = ({
   );
 };
 
-const DriveFiles = ({
-  searchKeyword,
-  onCountChange,
-}: {
-  searchKeyword: string;
-  onCountChange?: (count: number, isFetching: boolean) => void;
-}) => {
+const useDriveResults = (
+  searchKeyword: string,
+): { items: MergedResultItem[]; count: number; isFetching: boolean } => {
+  const { connections } = useConnections(GOOGLE_DRIVE_PROVIDER_ID);
   const { data: files, isFetching } = useConnectorSearch<DriveListItem>(
     `/api/connectors/${GOOGLE_DRIVE_PROVIDER_ID}/file`,
     "files",
     searchKeyword,
   );
-
-  useEffect(() => {
-    onCountChange?.(files.length, isFetching);
-  }, [files.length, isFetching, onCountChange]);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const {
@@ -86,27 +72,35 @@ const DriveFiles = ({
     reset,
   } = useConnectorDetail<DriveDetailItem>("file");
 
-  const handleRowClick = (file: DriveListItem) => {
-    if (expandedId === file.id) {
-      setExpandedId(null);
-      reset();
-      return;
-    }
+  const handleRowClick = useCallback(
+    (file: DriveListItem) => {
+      if (expandedId === file.id) {
+        setExpandedId(null);
+        reset();
+        return;
+      }
 
-    setExpandedId(file.id ?? null);
-    fetchDetail(`/api/connectors/${GOOGLE_DRIVE_PROVIDER_ID}/file/${file.id}`, {
-      integrationId: file.integrationId,
-      keyword: searchKeyword,
-    });
-  };
+      setExpandedId(file.id ?? null);
+      fetchDetail(`/api/connectors/${GOOGLE_DRIVE_PROVIDER_ID}/file/${file.id}`, {
+        integrationId: file.integrationId,
+        keyword: searchKeyword,
+      });
+    },
+    [expandedId, reset, fetchDetail, searchKeyword],
+  );
 
-  return (
-    <div className="flex flex-col gap-4">
-      {files.map((file) => (
+  const items = useMemo<MergedResultItem[]>(() => {
+    if (connections.length === 0) return [];
+
+    return files.map((file) => ({
+      id: file.id,
+      provider: GOOGLE_DRIVE_PROVIDER_ID,
+      updatedAt: file.updatedAt,
+      card: (
         <ResultCard
           key={file.id}
           provider={GOOGLE_DRIVE_PROVIDER_ID}
-          title={renderTitle(file)}
+          title={<LinkedTitle url={file.url} html={file.title} />}
           subtitle={file.metadata.mimeType}
           date={file.updatedAt}
           footer={file.accountEmail || "Unknown"}
@@ -118,9 +112,23 @@ const DriveFiles = ({
             ) : null
           }
         />
-      ))}
-    </div>
-  );
+      ),
+    }));
+  }, [
+    connections.length,
+    files,
+    expandedId,
+    detail,
+    loading,
+    error,
+    handleRowClick,
+  ]);
+
+  return {
+    items,
+    count: items.length,
+    isFetching: connections.length > 0 && isFetching,
+  };
 };
 
-export default DriveFiles;
+export default useDriveResults;

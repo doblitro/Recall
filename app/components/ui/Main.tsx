@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   GOOGLE_DRIVE_PROVIDER_ID,
   GMAIL_PROVIDER_ID,
 } from "@/lib/connectors/public";
-import ConnectorResults from "../connectors/ConnectorResults";
-import DriveFiles from "../drive/DriveFiles";
-import GmailMessages from "../gmail/GmailMessages";
+import useDriveResults from "../drive/useDriveResults";
+import useGmailResults from "../gmail/useGmailResults";
 import { useSearchFilter } from "@/app/providers/SearchFilterProvider";
 import FilterRow from "./FilterRow";
 import { useDebouncedValue } from "@tanstack/react-pacer";
@@ -23,22 +22,31 @@ const Main = () => {
 
   const isSearching = debouncer.state.isPending;
 
-  const [counts, setCounts] = useState<Partial<Record<string, number>>>({});
-  const [loadingByProvider, setLoadingByProvider] = useState<
-    Partial<Record<string, boolean>>
-  >({});
+  const drive = useDriveResults(searchKeyword);
+  const gmail = useGmailResults(searchKeyword);
 
-  const handleDriveCount = useCallback((count: number, isFetching: boolean) => {
-    setCounts((c) => ({ ...c, [GOOGLE_DRIVE_PROVIDER_ID]: count }));
-    setLoadingByProvider((l) => ({
-      ...l,
-      [GOOGLE_DRIVE_PROVIDER_ID]: isFetching,
-    }));
-  }, []);
-  const handleGmailCount = useCallback((count: number, isFetching: boolean) => {
-    setCounts((c) => ({ ...c, [GMAIL_PROVIDER_ID]: count }));
-    setLoadingByProvider((l) => ({ ...l, [GMAIL_PROVIDER_ID]: isFetching }));
-  }, []);
+  const counts = searchKeyword
+    ? {
+        [GOOGLE_DRIVE_PROVIDER_ID]: drive.count,
+        [GMAIL_PROVIDER_ID]: gmail.count,
+      }
+    : undefined;
+  const loadingByProvider = {
+    [GOOGLE_DRIVE_PROVIDER_ID]: drive.isFetching,
+    [GMAIL_PROVIDER_ID]: gmail.isFetching,
+  };
+
+  const results = useMemo(() => {
+    const merged = [...drive.items, ...gmail.items].filter(
+      (item) => activeProvider === null || item.provider === activeProvider,
+    );
+    merged.sort((a, b) => {
+      const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+      const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+      return bTime - aTime;
+    });
+    return merged;
+  }, [drive.items, gmail.items, activeProvider]);
 
   return (
     <div className="flex flex-col items-center min-h-screen py-2 px-4 gap-6 w-full">
@@ -56,35 +64,16 @@ const Main = () => {
           <FilterRow
             activeProvider={activeProvider}
             setActiveProvider={setActiveProvider}
-            counts={searchKeyword ? counts : undefined}
+            counts={counts}
             isSearching={isSearching}
             loadingByProvider={loadingByProvider}
           />
         </div>
       </div>
 
-      <ConnectorResults
-        providerId={GOOGLE_DRIVE_PROVIDER_ID}
-        heading="Google Drive Files"
-        hidden={
-          activeProvider !== null && activeProvider !== GOOGLE_DRIVE_PROVIDER_ID
-        }
-      >
-        <DriveFiles
-          searchKeyword={searchKeyword}
-          onCountChange={handleDriveCount}
-        />
-      </ConnectorResults>
-      <ConnectorResults
-        providerId={GMAIL_PROVIDER_ID}
-        heading="Gmail Messages"
-        hidden={activeProvider !== null && activeProvider !== GMAIL_PROVIDER_ID}
-      >
-        <GmailMessages
-          searchKeyword={searchKeyword}
-          onCountChange={handleGmailCount}
-        />
-      </ConnectorResults>
+      <div className="flex flex-col w-full md:w-2/3 gap-2">
+        {results.map((item) => item.card)}
+      </div>
     </div>
   );
 };

@@ -1,21 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import ResultCard from "../ui/ResultCard";
 import { GMAIL_PROVIDER_ID } from "@/lib/connectors/public";
 import useConnectorSearch from "@/app/hooks/useConnectorSearch";
 import useConnectorDetail from "@/app/hooks/useConnectorDetail";
+import useConnections from "@/app/hooks/useConnections";
 import { GmailListItem, GmailDetailItem } from "@/lib/connectors/types";
-import Link from "../ui/Link";
-
-const renderTitle = (message: GmailListItem) =>
-  message.url ? (
-    <Link href={message.url} target="_blank" rel="noopener noreferrer" showIcon>
-      <span dangerouslySetInnerHTML={{ __html: message.title }} />
-    </Link>
-  ) : (
-    <span dangerouslySetInnerHTML={{ __html: message.title }} />
-  );
+import LinkedTitle from "../ui/LinkedTitle";
+import { MergedResultItem } from "../results/types";
 
 const MessageDetail = ({
   detail,
@@ -85,22 +78,15 @@ const MessageDetail = ({
   );
 };
 
-const GmailMessages = ({
-  searchKeyword,
-  onCountChange,
-}: {
-  searchKeyword: string;
-  onCountChange?: (count: number, isFetching: boolean) => void;
-}) => {
+const useGmailResults = (
+  searchKeyword: string,
+): { items: MergedResultItem[]; count: number; isFetching: boolean } => {
+  const { connections } = useConnections(GMAIL_PROVIDER_ID);
   const { data: messages, isFetching } = useConnectorSearch<GmailListItem>(
     `/api/connectors/${GMAIL_PROVIDER_ID}/messages`,
     "messages",
     searchKeyword,
   );
-
-  useEffect(() => {
-    onCountChange?.(messages.length, isFetching);
-  }, [messages.length, isFetching, onCountChange]);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const {
@@ -111,27 +97,35 @@ const GmailMessages = ({
     reset,
   } = useConnectorDetail<GmailDetailItem>("message");
 
-  const handleRowClick = (message: GmailListItem) => {
-    if (expandedId === message.id) {
-      setExpandedId(null);
-      reset();
-      return;
-    }
+  const handleRowClick = useCallback(
+    (message: GmailListItem) => {
+      if (expandedId === message.id) {
+        setExpandedId(null);
+        reset();
+        return;
+      }
 
-    setExpandedId(message.id ?? null);
-    fetchDetail(`/api/connectors/${GMAIL_PROVIDER_ID}/messages/${message.id}`, {
-      integrationId: message.integrationId,
-      keyword: searchKeyword,
-    });
-  };
+      setExpandedId(message.id ?? null);
+      fetchDetail(
+        `/api/connectors/${GMAIL_PROVIDER_ID}/messages/${message.id}`,
+        { integrationId: message.integrationId, keyword: searchKeyword },
+      );
+    },
+    [expandedId, reset, fetchDetail, searchKeyword],
+  );
 
-  return (
-    <div className="flex flex-col gap-4">
-      {messages.map((message) => (
+  const items = useMemo<MergedResultItem[]>(() => {
+    if (connections.length === 0) return [];
+
+    return messages.map((message) => ({
+      id: message.id,
+      provider: GMAIL_PROVIDER_ID,
+      updatedAt: message.updatedAt,
+      card: (
         <ResultCard
           key={message.id}
           provider={GMAIL_PROVIDER_ID}
-          title={renderTitle(message)}
+          title={<LinkedTitle url={message.url} html={message.title} />}
           subtitle={
             <div
               dangerouslySetInnerHTML={{ __html: message.subtitle ?? "" }}
@@ -150,9 +144,23 @@ const GmailMessages = ({
             ) : null
           }
         />
-      ))}
-    </div>
-  );
+      ),
+    }));
+  }, [
+    connections.length,
+    messages,
+    expandedId,
+    detail,
+    loading,
+    error,
+    handleRowClick,
+  ]);
+
+  return {
+    items,
+    count: items.length,
+    isFetching: connections.length > 0 && isFetching,
+  };
 };
 
-export default GmailMessages;
+export default useGmailResults;
