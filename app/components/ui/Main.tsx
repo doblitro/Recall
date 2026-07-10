@@ -10,16 +10,24 @@ import DriveFiles from "../drive/DriveFiles";
 import GmailMessages from "../gmail/GmailMessages";
 import { useSearchFilter } from "@/app/providers/SearchFilterProvider";
 import FilterRow from "./FilterRow";
+import { useDebouncedValue } from "@tanstack/react-pacer";
+import { Loader } from "lucide-react";
 
 const Main = () => {
   const [inputValue, setInputValue] = useState("");
-  const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchKeyword, debouncer] = useDebouncedValue(
+    inputValue,
+    { wait: 500 },
+    (state) => ({ isPending: state.isPending }),
+  );
   const { activeProvider, setActiveProvider } = useSearchFilter();
+
+  const isSearching = debouncer.state.isPending;
 
   return (
     <div className="flex flex-col items-center min-h-screen py-2 px-4 gap-6 w-full md:w-3/4">
       <div className="flex flex-col gap-2">
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 relative">
           <input
             type="text"
             placeholder="Search..."
@@ -27,12 +35,13 @@ const Main = () => {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />
-          <button
-            className="rounded bg-accent px-4 py-1 text-accent-foreground hover:bg-accent-hover"
-            onClick={() => setSearchKeyword(inputValue)}
-          >
-            Search
-          </button>
+          {isSearching && (
+            <Loader
+              className="size-4 animate-spin text-muted-foreground absolute -right-6"
+              aria-label="Searching"
+              role="status"
+            />
+          )}
         </div>
         <FilterRow
           activeProvider={activeProvider}
