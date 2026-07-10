@@ -2,133 +2,141 @@
 
 :root {
   /* Backgrounds */
-  --background: #f7f7f5;
-  --surface: #ffffff;
-  --surface-hover: #f2f2ef;
+  --background: #0f1115;
+  --surface: #171a21;
+  --surface-hover: #1f2430;
 
   /* Text */
-  --foreground: #171717;
-  --muted-foreground: #6f6f6a;
+  --foreground: #f5f7fa;
+  --muted-foreground: #98a2b3;
 
-  /* Borders & Inputs */
-  --border: #e6e6e3;
-  --input: #d4d4d1;
-  --ring: #818cf8;
+  /* Borders */
+  --border: #2b313d;
+  --input: #343b48;
+  --ring: #8b9bff;
 
   /* Brand */
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
+  --accent: #7c8cff;
+  --accent-hover: #98a5ff;
   --accent-foreground: #ffffff;
 
+  /* Danger */
+  --danger: #f87171;
+  --danger-hover: #ef4444;
+  --danger-foreground: #ffffff;
+
   /* Success */
-  --success: #16a34a;
-  --success-hover: #15803d;
-  --success-foreground: #ffffff;
+  --success: #22c55e;
+  --success-hover: #16a34a;
 
   /* Warning */
-  --warning: #d97706;
-  --warning-hover: #b45309;
-  --warning-foreground: #ffffff;
+  --warning: #f59e0b;
+
+  /* Highlight */
+  --highlight: #3730a3;
+  --highlight-foreground: #ffffff;
+}
+
+.light {
+  /* Backgrounds */
+  --background: #f6f7f9;
+  --surface: #ffffff;
+  --surface-hover: #f3f5f7;
+
+  /* Text */
+  --foreground: #111827;
+  --muted-foreground: #667085;
+
+  /* Borders */
+  --border: #e4e7ec;
+  --input: #d0d5dd;
+  --ring: #6366f1;
+
+  /* Brand */
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-foreground: #ffffff;
 
   /* Danger */
   --danger: #dc2626;
   --danger-hover: #b91c1c;
   --danger-foreground: #ffffff;
 
-  /* Highlight */
-  --highlight: #fde68a;
-  --highlight-foreground: #171717;
-}
-
-.dark {
-  /* Backgrounds */
-  --background: #0d0d10;
-  --surface: #17171a;
-  --surface-hover: #202024;
-
-  /* Text */
-  --foreground: #f5f5f4;
-  --muted-foreground: #a1a1aa;
-
-  /* Borders & Inputs */
-  --border: #2e2e33;
-  --input: #3f3f46;
-  --ring: #a5b4fc;
-
-  /* Brand */
-  --accent: #818cf8;
-  --accent-hover: #6366f1;
-  --accent-foreground: #09090b;
-
   /* Success */
-  --success: #4ade80;
-  --success-hover: #22c55e;
-  --success-foreground: #09090b;
+  --success: #16a34a;
+  --success-hover: #15803d;
 
   /* Warning */
-  --warning: #fbbf24;
-  --warning-hover: #f59e0b;
-  --warning-foreground: #09090b;
-
-  /* Danger */
-  --danger: #f87171;
-  --danger-hover: #ef4444;
-  --danger-foreground: #09090b;
+  --warning: #d97706;
 
   /* Highlight */
-  --highlight: #854d0e;
-  --highlight-foreground: #fafafa;
+  --highlight: #fde68a;
+  --highlight-foreground: #111827;
 }
 
 @theme inline {
-  /* Backgrounds */
+  /* Colors */
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
 
-  /* Text */
   --color-foreground: var(--foreground);
   --color-muted-foreground: var(--muted-foreground);
 
-  /* UI */
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Brand */
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-foreground: var(--accent-foreground);
 
-  /* Status */
-  --color-success: var(--success);
-  --color-success-hover: var(--success-hover);
-  --color-success-foreground: var(--success-foreground);
-
-  --color-warning: var(--warning);
-  --color-warning-hover: var(--warning-hover);
-  --color-warning-foreground: var(--warning-foreground);
-
   --color-danger: var(--danger);
   --color-danger-hover: var(--danger-hover);
   --color-danger-foreground: var(--danger-foreground);
+
+  --color-success: var(--success);
+  --color-success-hover: var(--success-hover);
+
+  --color-warning: var(--warning);
 
   /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+html,
+body {
+  min-height: 100%;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
+  font-family: var(--font-geist-sans), sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Subtle ambient glow */
+  background-image: radial-gradient(
+    circle at top,
+    rgba(124, 140, 255, 0.08),
+    transparent 45%
+  );
+}
+
+* {
+  border-color: var(--border);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-foreground);
 }
 
 mark {
   background: var(--highlight);
   color: var(--highlight-foreground);
   padding: 0 0.15em;
-  border-radius: 0.2rem;
+  border-radius: 0.25rem;
 }

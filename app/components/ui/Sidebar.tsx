@@ -45,7 +45,7 @@ const Sidebar = () => {
   if (status === "unauthenticated") {
     return (
       <div className="relative shrink-0">
-        <aside className="bg-accent-foreground border-border sticky top-0 z-2 flex h-screen w-full flex-col justify-between border-r p-4 shadow-sm">
+        <aside className="bg-surface border-border sticky top-0 z-2 flex h-screen w-full flex-col justify-between border-r p-4 shadow-sm">
           <div className="flex flex-col gap-4">
             <BrandTypeface showDescription />
             <LoginButton />
@@ -70,7 +70,7 @@ const Sidebar = () => {
         aria-expanded={isOpen}
         aria-label={isOpen ? "Hide sidebar" : "Show sidebar"}
         title={isOpen ? "Hide sidebar" : "Show sidebar"}
-        className={`border-border bg-accent-foreground hover:bg-accent-hover fixed top-4 z-50 flex h-9 w-9 items-center justify-center rounded-xl border shadow-sm transition-[left] duration-200 md:absolute md:z-10 ${
+        className={`border-border bg-surface hover:bg-accent-hover fixed top-4 z-50 flex h-9 w-9 items-center justify-center rounded-xl border shadow-sm transition-[left] duration-200 md:absolute md:z-10 ${
           isOpen ? "left-60 md:-right-5 md:left-auto" : "left-2 md:-right-8"
         }`}
       >
@@ -82,7 +82,7 @@ const Sidebar = () => {
       </button>
 
       <aside
-        className={`bg-accent-foreground border-border fixed top-0 left-0 z-40 flex h-dvh flex-col justify-between overflow-hidden border-r shadow-sm transition-all duration-200 md:static md:z-2 md:h-full ${
+        className={`bg-surface border-border fixed top-0 left-0 z-40 flex h-dvh flex-col justify-between overflow-hidden border-r shadow-sm transition-all duration-200 md:static md:z-2 md:h-full ${
           isOpen
             ? "w-64 translate-x-0 p-4"
             : "w-64 -translate-x-full p-4 md:w-0 md:translate-x-0 md:border-r-0 md:p-0"

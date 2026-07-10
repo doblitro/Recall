@@ -82,7 +82,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className={`min-h-full flex flex-col ${geist.className}`}>
+      <body className={`flex min-h-full flex-col ${geist.className}`}>
         <Providers>{children}</Providers>
       </body>
     </html>
