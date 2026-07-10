@@ -11,7 +11,7 @@ export default async function Home() {
   return (
     <main className="flex w-full">
       <Sidebar />
-      <div className="w-full flex justify-center">
+      <div className="w-full flex justify-center min-w-0">
         {!!isAuthenticated && <Main />}
       </div>
     </main>
