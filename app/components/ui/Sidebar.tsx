@@ -70,7 +70,7 @@ const Sidebar = () => {
         )}
       </button>
       <aside
-        className={`fixed md:sticky top-0 left-0 h-screen flex flex-col justify-between bg-accent-foreground border-r border-border shadow-sm transition-all duration-200 overflow-hidden z-40 md:z-2 ${
+        className={`fixed md:sticky top-0 left-0 h-full flex flex-col justify-between bg-accent-foreground border-r border-border shadow-sm transition-all duration-200 overflow-hidden z-40 md:z-2 ${
           isOpen
             ? "w-64 p-4 translate-x-0"
             : "w-64 p-4 -translate-x-full md:w-0 md:p-0 md:border-r-0 md:translate-x-0"
