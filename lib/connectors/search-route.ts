@@ -1,5 +1,8 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { getActiveIntegrations, getValidAccessToken } from "@/lib/connectors/token";
+import {
+  getActiveIntegrations,
+  getValidAccessToken,
+} from "@/lib/connectors/token";
 import { getPrismaClient } from "@/lib/prisma/client";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -78,7 +81,13 @@ export function createSearchRoute<T extends object>({
       const integrations = await getActiveIntegrations(user.id, providerId);
 
       if (integrations.length === 0) {
-        return NextResponse.json({ error: notConnectedMessage }, { status: 403 });
+        console.error(
+          `[${providerId}] No active integrations for user ${user.id} — returning 403`,
+        );
+        return NextResponse.json(
+          { error: notConnectedMessage },
+          { status: 403 },
+        );
       }
 
       const targetIntegrations = integrationId
@@ -128,7 +137,11 @@ export function createDetailRoute<T extends object>({
   providerId: string;
   itemKey: string;
   notConnectedMessage: string;
-  fetchDetail: (accessToken: string, itemId: string, keyword: string) => Promise<T>;
+  fetchDetail: (
+    accessToken: string,
+    itemId: string,
+    keyword: string,
+  ) => Promise<T>;
 }) {
   return async function GET(
     request: NextRequest,

@@ -9,13 +9,17 @@ const useConnectorSearch = <T>(
 ) => {
   const { data, isFetching } = useQuery({
     queryKey: [endpoint, itemsKey, searchKeyword],
-    queryFn: async () => {
-      const response = await fetch(`${endpoint}?keyword=${searchKeyword}`);
+    queryFn: async ({ signal }) => {
+      const response = await fetch(`${endpoint}?keyword=${searchKeyword}`, {
+        signal,
+      });
       if (!response.ok) throw new Error(`Failed to fetch ${itemsKey}`);
       const data = await response.json();
       return (data[itemsKey] || []) as T[];
     },
     enabled: !!searchKeyword,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 
   return { data: data ?? [], isFetching };
