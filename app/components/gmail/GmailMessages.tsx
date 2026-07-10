@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Table, { Column } from "../ui/Table";
 import { GMAIL_PROVIDER_ID } from "@/lib/connectors/public";
 import useConnectorSearch from "@/app/hooks/useConnectorSearch";
@@ -115,12 +115,22 @@ const MessageDetail = ({
   );
 };
 
-const GmailMessages = ({ searchKeyword }: { searchKeyword: string }) => {
-  const messages = useConnectorSearch<GmailListItem>(
+const GmailMessages = ({
+  searchKeyword,
+  onCountChange,
+}: {
+  searchKeyword: string;
+  onCountChange?: (count: number, isFetching: boolean) => void;
+}) => {
+  const { data: messages, isFetching } = useConnectorSearch<GmailListItem>(
     `/api/connectors/${GMAIL_PROVIDER_ID}/messages`,
     "messages",
     searchKeyword,
   );
+
+  useEffect(() => {
+    onCountChange?.(messages.length, isFetching);
+  }, [messages.length, isFetching, onCountChange]);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const {

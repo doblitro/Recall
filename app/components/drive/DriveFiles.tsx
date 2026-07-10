@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Table, { Column } from "../ui/Table";
 import { GOOGLE_DRIVE_PROVIDER_ID } from "@/lib/connectors/public";
 import useConnectorSearch from "@/app/hooks/useConnectorSearch";
@@ -82,12 +82,22 @@ const FileDetail = ({
   );
 };
 
-const DriveFiles = ({ searchKeyword }: { searchKeyword: string }) => {
-  const files = useConnectorSearch<DriveListItem>(
+const DriveFiles = ({
+  searchKeyword,
+  onCountChange,
+}: {
+  searchKeyword: string;
+  onCountChange?: (count: number, isFetching: boolean) => void;
+}) => {
+  const { data: files, isFetching } = useConnectorSearch<DriveListItem>(
     `/api/connectors/${GOOGLE_DRIVE_PROVIDER_ID}/file`,
     "files",
     searchKeyword,
   );
+
+  useEffect(() => {
+    onCountChange?.(files.length, isFetching);
+  }, [files.length, isFetching, onCountChange]);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const {
