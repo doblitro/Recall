@@ -1,43 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Table, { Column } from "../ui/Table";
+import ResultCard from "../ui/ResultCard";
 import { GOOGLE_DRIVE_PROVIDER_ID } from "@/lib/connectors/public";
 import useConnectorSearch from "@/app/hooks/useConnectorSearch";
 import useConnectorDetail from "@/app/hooks/useConnectorDetail";
 import { DriveListItem, DriveDetailItem } from "@/lib/connectors/types";
 import Link from "../ui/Link";
 
-const columns: Column<DriveListItem>[] = [
-  {
-    header: "Origin",
-    render: (file) => file.accountEmail || "Unknown",
-  },
-  {
-    header: "File Name",
-    render: (file) =>
-      file.url ? (
-        <Link
-          href={file.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          showIcon
-        >
-          <span dangerouslySetInnerHTML={{ __html: file.title }} />
-        </Link>
-      ) : (
-        <span dangerouslySetInnerHTML={{ __html: file.title }} />
-      ),
-  },
-  {
-    header: "File Type",
-    render: (file) => file.metadata.mimeType,
-  },
-  {
-    header: "Last Modified",
-    render: (file) => file.updatedAt,
-  },
-];
+const renderTitle = (file: DriveListItem) =>
+  file.url ? (
+    <Link href={file.url} target="_blank" rel="noopener noreferrer" showIcon>
+      <span dangerouslySetInnerHTML={{ __html: file.title }} />
+    </Link>
+  ) : (
+    <span dangerouslySetInnerHTML={{ __html: file.title }} />
+  );
 
 const FileDetail = ({
   detail,
@@ -124,17 +102,23 @@ const DriveFiles = ({
 
   return (
     <div className="flex flex-col gap-4">
-      <Table
-        items={files}
-        columns={columns}
-        isRowExpanded={(file) => file.id === expandedId}
-        onRowClick={handleRowClick}
-        renderDetail={(file) =>
-          file.id === expandedId ? (
-            <FileDetail detail={detail} loading={loading} error={error} />
-          ) : null
-        }
-      />
+      {files.map((file) => (
+        <ResultCard
+          key={file.id}
+          provider={GOOGLE_DRIVE_PROVIDER_ID}
+          title={renderTitle(file)}
+          subtitle={file.metadata.mimeType}
+          date={file.updatedAt}
+          footer={file.accountEmail || "Unknown"}
+          expanded={file.id === expandedId}
+          onClick={() => handleRowClick(file)}
+          renderDetail={() =>
+            file.id === expandedId ? (
+              <FileDetail detail={detail} loading={loading} error={error} />
+            ) : null
+          }
+        />
+      ))}
     </div>
   );
 };

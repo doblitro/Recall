@@ -1,51 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Table, { Column } from "../ui/Table";
+import ResultCard from "../ui/ResultCard";
 import { GMAIL_PROVIDER_ID } from "@/lib/connectors/public";
 import useConnectorSearch from "@/app/hooks/useConnectorSearch";
 import useConnectorDetail from "@/app/hooks/useConnectorDetail";
 import { GmailListItem, GmailDetailItem } from "@/lib/connectors/types";
 import Link from "../ui/Link";
 
-const columns: Column<GmailListItem>[] = [
-  {
-    header: "Origin",
-    render: (message) => message.accountEmail || "Unknown",
-  },
-  {
-    header: "Subject",
-    render: (message) =>
-      message.url ? (
-        <Link
-          href={message.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          showIcon
-        >
-          <span dangerouslySetInnerHTML={{ __html: message.title }} />
-        </Link>
-      ) : (
-        <span dangerouslySetInnerHTML={{ __html: message.title }} />
-      ),
-  },
-  {
-    header: "From",
-    render: (message) => (
-      <div dangerouslySetInnerHTML={{ __html: message.subtitle ?? "" }} />
-    ),
-  },
-  {
-    header: "Snippet",
-    render: (message) => (
-      <div dangerouslySetInnerHTML={{ __html: message.preview ?? "" }} />
-    ),
-  },
-  {
-    header: "Date",
-    render: (message) => message.updatedAt,
-  },
-];
+const renderTitle = (message: GmailListItem) =>
+  message.url ? (
+    <Link href={message.url} target="_blank" rel="noopener noreferrer" showIcon>
+      <span dangerouslySetInnerHTML={{ __html: message.title }} />
+    </Link>
+  ) : (
+    <span dangerouslySetInnerHTML={{ __html: message.title }} />
+  );
 
 const MessageDetail = ({
   detail,
@@ -157,17 +127,30 @@ const GmailMessages = ({
 
   return (
     <div className="flex flex-col gap-4">
-      <Table
-        items={messages}
-        columns={columns}
-        isRowExpanded={(message) => message.id === expandedId}
-        onRowClick={handleRowClick}
-        renderDetail={(message) =>
-          message.id === expandedId ? (
-            <MessageDetail detail={detail} loading={loading} error={error} />
-          ) : null
-        }
-      />
+      {messages.map((message) => (
+        <ResultCard
+          key={message.id}
+          provider={GMAIL_PROVIDER_ID}
+          title={renderTitle(message)}
+          subtitle={
+            <div
+              dangerouslySetInnerHTML={{ __html: message.subtitle ?? "" }}
+            />
+          }
+          preview={
+            <div dangerouslySetInnerHTML={{ __html: message.preview ?? "" }} />
+          }
+          date={message.updatedAt}
+          footer={message.accountEmail || "Unknown"}
+          expanded={message.id === expandedId}
+          onClick={() => handleRowClick(message)}
+          renderDetail={() =>
+            message.id === expandedId ? (
+              <MessageDetail detail={detail} loading={loading} error={error} />
+            ) : null
+          }
+        />
+      ))}
     </div>
   );
 };
