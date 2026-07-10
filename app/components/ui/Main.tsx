@@ -17,7 +17,7 @@ const Main = () => {
   const { activeProvider, setActiveProvider } = useSearchFilter();
 
   return (
-    <div className="flex flex-col items-center min-h-screen py-2 gap-6 w-3/4">
+    <div className="flex flex-col items-center min-h-screen py-2 px-4 gap-6 w-full md:w-3/4">
       <div className="flex flex-col gap-2">
         <div className="flex gap-2">
           <input

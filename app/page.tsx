@@ -1,4 +1,3 @@
-import LoginButton from "./components/auth/LoginButton";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]/route";
 import Main from "./components/ui/Main";
@@ -9,7 +8,7 @@ export default async function Home() {
   const isAuthenticated = !!session;
 
   return (
-    <main className="flex w-full">
+    <main className="flex w-full overflow-x-hidden">
       <Sidebar />
       <div className="w-full flex justify-center min-w-0">
         {!!isAuthenticated && <Main />}
