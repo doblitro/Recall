@@ -8,11 +8,13 @@ export default async function Home() {
   const isAuthenticated = !!session;
 
   return (
-    <main className="flex w-full overflow-x-hidden">
+    <div className="flex w-full overflow-x-hidden h-dvh">
       <Sidebar />
-      <div className="w-full flex justify-center min-w-0">
-        {!!isAuthenticated && <Main />}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <main className="max-w-[90%] lg:max-w-4/5 mx-auto">
+          {!!isAuthenticated && <Main />}
+        </main>
       </div>
-    </main>
+    </div>
   );
 }

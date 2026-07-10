@@ -41,8 +41,8 @@ const Main = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center min-h-screen py-2 px-4 gap-6 w-full md:w-3/4">
-      <div className="flex flex-col gap-2 w-1/3">
+    <div className="flex flex-col items-center min-h-screen py-2 px-4 gap-6 w-full">
+      <div className="flex flex-col gap-2 md:w-2/3">
         <div className="flex items-center gap-2 relative">
           <input
             type="text"
