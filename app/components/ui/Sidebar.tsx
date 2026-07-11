@@ -89,7 +89,7 @@ const Sidebar = () => {
         }`}
       >
         <div className="flex h-full w-full flex-col justify-between">
-          <BrandTypeface showDescription />
+          <BrandTypeface compact />
           <ProviderConnections />
           <LoginButton />
         </div>

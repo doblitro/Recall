@@ -1,11 +1,30 @@
+import Image from "next/image";
+
 type BrandTypefaceProps = {
   showDescription?: boolean;
+  compact?: boolean;
 };
 
-export function BrandTypeface({ showDescription = false }: BrandTypefaceProps) {
+export function BrandTypeface({
+  showDescription = false,
+  compact = false,
+}: BrandTypefaceProps) {
   return (
-    <div className="space-y-3">
-      <h1 className="text-4xl font-semibold tracking-tight">Recall</h1>
+    <div className={`flex gap-2 ${compact ? "items-center" : "flex-col"}`}>
+      <Image
+        src="/icon.svg"
+        alt="Recall icon"
+        height={16}
+        width={16}
+        draggable={false}
+        className="shrink-0"
+      />
+
+      <h1
+        className={`m-0 font-semibold tracking-tight ${compact ? "text-2xl" : "text-4xl"}`}
+      >
+        Recall
+      </h1>
 
       {showDescription && (
         <p className="text-muted-foreground max-w-sm text-base leading-7">
