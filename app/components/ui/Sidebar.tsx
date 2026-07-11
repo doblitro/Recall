@@ -70,7 +70,7 @@ const Sidebar = () => {
         aria-expanded={isOpen}
         aria-label={isOpen ? "Hide sidebar" : "Show sidebar"}
         title={isOpen ? "Hide sidebar" : "Show sidebar"}
-        className={`border-border bg-surface hover:bg-accent-hover fixed top-4 z-50 flex h-9 w-9 items-center justify-center rounded-xl border shadow-sm transition-[left] duration-200 md:absolute md:z-10 ${
+        className={`border-border bg-surface hover:bg-accent-hover fixed top-4 z-50 flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border shadow-sm transition-[left] duration-200 md:absolute md:z-10 ${
           isOpen ? "left-60 md:-right-5 md:left-auto" : "left-2 md:-right-8"
         }`}
       >
@@ -84,14 +84,22 @@ const Sidebar = () => {
       <aside
         className={`bg-surface border-border fixed top-0 left-0 z-40 flex h-dvh flex-col justify-between overflow-hidden border-r shadow-sm transition-all duration-200 md:static md:z-2 md:h-full ${
           isOpen
-            ? "w-64 translate-x-0 p-4"
-            : "w-64 -translate-x-full p-4 md:w-0 md:translate-x-0 md:border-r-0 md:p-0"
+            ? "w-64 translate-x-0"
+            : "w-64 -translate-x-full md:w-0 md:translate-x-0 md:border-r-0"
         }`}
       >
         <div className="flex h-full w-full flex-col justify-between">
-          <BrandTypeface compact />
-          <ProviderConnections />
-          <LoginButton />
+          <div>
+            <div className="border-b p-4">
+              <BrandTypeface compact />
+            </div>
+            <div className="min-h-0 overflow-y-auto">
+              <ProviderConnections />
+            </div>
+          </div>
+          <div className="border-t px-4 py-6">
+            <LoginButton />
+          </div>
         </div>
       </aside>
     </div>

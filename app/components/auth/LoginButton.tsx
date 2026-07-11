@@ -1,31 +1,34 @@
 "use client";
 
+import { LoaderIcon, LogOut } from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
+import Image from "next/image";
 
 const LoginButton = () => {
-  const { data: session } = useSession();
-
-  if (session) {
-    return (
-      <div className="flex flex-col items-center gap-2 whitespace-no-wrap">
-        <p>{session.user?.name}</p>
-        <button
-          onClick={() => signOut()}
-          className="rounded bg-danger px-4 py-2 text-danger-foreground hover:bg-danger-hover"
-        >
-          Sign Out
-        </button>
-      </div>
-    );
-  }
+  const { data: session, status } = useSession();
 
   return (
-    <button
-      onClick={() => signIn("google", { prompt: "select_account" })}
-      className="rounded bg-accent px-4 py-2 text-accent-foreground hover:bg-accent-hover"
-    >
-      Sign in with Google
-    </button>
+    <div>
+      {status === "loading" ? (
+        <div className="flex items-center justify-center" aria-label="Loading">
+          <LoaderIcon height={14} width={14} className="animate-spin" />
+        </div>
+      ) : session ? (
+        <div className="flex justify-between gap-2 whitespace-nowrap">
+          <p className="text-sm">{session.user?.name}</p>{" "}
+          <button onClick={() => signOut()}>
+            <LogOut width={14} height={14} className="rotate-180" />
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => signIn("google", { prompt: "select_account" })}
+          className="bg-accent text-accent-foreground hover:bg-accent-hover rounded px-4 py-2"
+        >
+          Sign in with Google
+        </button>
+      )}
+    </div>
   );
 };
 

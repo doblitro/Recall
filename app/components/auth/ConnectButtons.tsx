@@ -5,6 +5,10 @@ import { CONNECTOR_LIST } from "@/lib/connectors/public";
 import { LogOut, PlusIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 
+const ActiveIndicator = () => {
+  return <div className="h-1.5 w-1.5 rounded-full bg-green-600" />;
+};
+
 const ConnectButtons = ({ type }: { type: string }) => {
   const { data: session, status } = useSession();
   const { connections, refresh } = useConnections(type);
@@ -50,23 +54,30 @@ const ConnectButtons = ({ type }: { type: string }) => {
   };
 
   return (
-    <div className="flex w-full flex-col gap-2 items-stretch">
-      {connections.map((connection) => (
-        <div key={connection.id} className="w-full">
-          <button
-            onClick={() => handleDisconnect(connection.id)}
-            className="flex w-full items-center justify-between gap-2 rounded bg-danger px-4 py-2 text-danger-foreground whitespace-nowrap hover:bg-danger-hover"
-          >
-            <span className="truncate">{connection.accountEmail ?? label}</span>
-            <LogOut className="rotate-180 w-3 h-3 shrink-0" />
-          </button>
-        </div>
-      ))}
+    <div className="flex w-full flex-col items-stretch gap-2">
+      <div className="p-1">
+        {connections.map((connection) => (
+          <div key={connection.id} className="w-full">
+            <button
+              onClick={() => handleDisconnect(connection.id)}
+              className="flex w-full items-center justify-between gap-2 py-2 text-xs"
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <ActiveIndicator />
+                <span className="min-w-0 truncate">
+                  {connection.accountEmail ?? label}
+                </span>
+              </div>
+              <LogOut className="h-3 w-3 shrink-0 rotate-180" />
+            </button>
+          </div>
+        ))}
+      </div>
       <button
         onClick={handleConnect}
-        className="flex w-full items-center justify-center rounded bg-accent px-4 py-2 text-accent-foreground hover:bg-accent-hover"
+        className="bg-surface text-surface-foreground hover:bg-surface-hover flex w-full items-center justify-center border border-dashed p-2 text-xs"
       >
-        <PlusIcon />
+        Add an account <PlusIcon width={14} height={14} />
       </button>
     </div>
   );
