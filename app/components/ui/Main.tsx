@@ -85,7 +85,7 @@ const Main = () => {
     >
       <div ref={searchBarRef} className="h-px w-full" />
       <div
-        className={`sticky top-4 z-40 w-full max-w-3xl rounded-2xl p-2
+        className={`sticky top-4 z-1 w-full max-w-3xl rounded-2xl p-2
           backdrop-blur-md
           transition-[background-color,border-color,border-width,box-shadow,padding,transform]
           duration-[200ms,200ms,200ms,200ms,200ms,500ms] ease-out ${
