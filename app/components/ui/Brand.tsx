@@ -14,8 +14,8 @@ export function BrandTypeface({
       <Image
         src="/icon.svg"
         alt="Recall icon"
-        height={16}
-        width={16}
+        height={compact ? 26 : 40}
+        width={compact ? 26 : 40}
         draggable={false}
         className="shrink-0"
       />
