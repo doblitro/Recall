@@ -11,6 +11,7 @@ import { useSearchFilter } from "@/app/providers/SearchFilterProvider";
 import FilterRow from "./FilterRow";
 import { useDebouncedValue } from "@tanstack/react-pacer";
 import { Search, X } from "lucide-react";
+import ResultCard from "./ResultCard";
 
 const Main = () => {
   const [inputValue, setInputValue] = useState("");
@@ -116,13 +117,36 @@ const Main = () => {
       </div>
 
       <div
-        className={`mt-8 flex w-full max-w-4xl flex-col gap-2 transition-all duration-300 ${
+        className={`my-8 flex w-full max-w-4xl flex-col gap-2 transition-all duration-300 ${
           hasStartedSearching
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-4 opacity-0"
         }`}
       >
-        {results.map((item) => item.card)}
+        {!isSearching ? (
+          results.map((item) => item.card)
+        ) : (
+          <>
+            <ResultCard
+              provider={""}
+              title={undefined}
+              expanded={false}
+              isSkeleton
+            />
+            <ResultCard
+              provider={""}
+              title={undefined}
+              expanded={false}
+              isSkeleton
+            />
+            <ResultCard
+              provider={""}
+              title={undefined}
+              expanded={false}
+              isSkeleton
+            />
+          </>
+        )}
       </div>
     </div>
   );
