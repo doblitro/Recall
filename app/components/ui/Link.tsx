@@ -16,7 +16,7 @@ const Link = ({
     <a
       href={href}
       className={[
-        "inline-flex items-center gap-1 whitespace-nowrap text-accent hover:underline hover:text-accent-hover",
+        "text-accent hover:text-accent-hover inline-flex items-center gap-1 whitespace-nowrap hover:underline",
         className,
       ]
         .filter(Boolean)

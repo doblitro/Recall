@@ -7,7 +7,8 @@ interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
 function Skeleton({ className, hasOwnBg = true, ...props }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse rounded ${hasOwnBg ? "bg-surface" : ""} ${className ?? ""}`}
+      className={`animate-pulse rounded ${hasOwnBg ? "bg-surface" : ""}
+        ${className ?? ""}`}
       {...props}
     />
   );

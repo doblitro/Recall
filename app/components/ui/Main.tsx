@@ -76,21 +76,30 @@ const Main = () => {
 
   return (
     <div
-      className={`flex min-h-screen w-full flex-col items-center px-4 transition-all duration-500 ease-out ${
-        hasStartedSearching || isSearching
-          ? "justify-start pt-8"
-          : "justify-center"
-      }`}
+      className={`flex min-h-screen w-full flex-col items-center px-4
+        transition-all duration-500 ease-out ${
+          hasStartedSearching || isSearching
+            ? "justify-start pt-8"
+            : "justify-center"
+        }`}
     >
       <div ref={searchBarRef} className="h-px w-full" />
       <div
-        className={`sticky top-4 z-40 w-full max-w-3xl rounded-2xl p-2 backdrop-blur-md transition-all duration-500 ease-out ${isSearchSticky ? "bg-surface p-4 shadow-[0_0_15px_5px_var(--search-shadow)]" : "bg-transparent shadow-none"} ${
-          hasStartedSearching || isSearching ? "scale-100" : "scale-105"
-        }`}
+        className={`sticky top-4 z-40 w-full max-w-3xl rounded-2xl p-2
+          backdrop-blur-md
+          transition-[background-color,border-color,border-width,box-shadow,padding,transform]
+          duration-[200ms,200ms,200ms,200ms,200ms,500ms] ease-out ${
+            isSearchSticky
+              ? "bg-background/90 border-border border p-4 shadow-xl"
+              : "border-0 bg-transparent shadow-none"
+          } ${hasStartedSearching || isSearching ? "scale-100" : "scale-105"}`}
       >
         <div className="flex flex-col gap-4">
           <div className="relative">
-            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2" />
+            <Search
+              className="text-muted-foreground pointer-events-none absolute
+                top-1/2 left-4 h-5 w-5 -translate-y-1/2"
+            />
 
             <input
               ref={inputRef}
@@ -104,7 +113,10 @@ const Main = () => {
                   inputRef.current?.focus();
                 }
               }}
-              className="bg-surface text-foreground border-border placeholder:text-muted-foreground focus:border-accent focus:ring-accent/20 w-full rounded-2xl border py-3 pr-12 pl-12 text-lg transition-all duration-200 outline-none focus:ring-2"
+              className="bg-surface text-foreground border-border
+                placeholder:text-muted-foreground focus:border-accent
+                focus:ring-accent/20 w-full rounded-2xl border py-3 pr-12 pl-12
+                text-lg transition-all duration-200 outline-none focus:ring-2"
             />
 
             {inputValue.length > 0 && (
@@ -115,7 +127,10 @@ const Main = () => {
                   setInputValue("");
                   inputRef.current?.focus();
                 }}
-                className="text-muted-foreground hover:bg-surface-hover hover:text-foreground absolute top-1/2 right-2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full transition-all duration-150"
+                className="text-muted-foreground hover:bg-surface-hover
+                  hover:text-foreground absolute top-1/2 right-2 flex h-8 w-8
+                  -translate-y-1/2 items-center justify-center rounded-full
+                  transition-all duration-150"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -134,11 +149,12 @@ const Main = () => {
         </div>
       </div>
       <div
-        className={`my-8 flex w-full max-w-4xl flex-col gap-2 transition-all duration-300 ${
-          hasStartedSearching
-            ? "translate-y-0 opacity-100"
-            : "pointer-events-none translate-y-4 opacity-0"
-        }`}
+        className={`my-8 flex w-full max-w-4xl flex-col gap-2 transition-all
+          duration-300 ${
+            hasStartedSearching
+              ? "translate-y-0 opacity-100"
+              : "pointer-events-none translate-y-4 opacity-0"
+          }`}
       >
         {!isSearching ? (
           results.map((item) => item.card)

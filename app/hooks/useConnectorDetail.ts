@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 
-const useConnectorDetail = <T,>(itemKey: string) => {
+const useConnectorDetail = <T>(itemKey: string) => {
   const [state, setState] = useState<{
     data: T | null;
     loading: boolean;

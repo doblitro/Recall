@@ -29,13 +29,18 @@ const ResultCard = ({
 
   return (
     <div
-      className={`border-border shadow-input flex flex-col gap-2 rounded-xl border-2 px-4 py-3 ${
-        onClick ? "hover:bg-surface-hover cursor-pointer" : ""
-      } ${expanded ? "bg-surface-hover" : ""} ${isSkeleton ? "h-24" : "h-fit"}`}
+      className={`border-border shadow-input flex flex-col gap-2 rounded-xl
+        border-2 px-4 py-3 ${
+          onClick ? "hover:bg-surface-hover cursor-pointer" : ""
+        }
+        ${expanded ? "bg-surface-hover" : ""} ${isSkeleton ? "h-24" : "h-fit"}`}
       onClick={onClick}
     >
       <div className="flex items-start gap-3">
-        <div className="bg-surface flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full">
+        <div
+          className="bg-surface flex size-9 shrink-0 items-center justify-center
+            overflow-hidden rounded-full"
+        >
           {isSkeleton ? (
             <Skeleton className="h-5 w-5" />
           ) : (
@@ -82,7 +87,10 @@ const ResultCard = ({
             </div>
           )}
           {!isSkeleton && footer && (
-            <div className="text-muted-foreground mt-2 flex items-center gap-1 text-xs">
+            <div
+              className="text-muted-foreground mt-2 flex items-center gap-1
+                text-xs"
+            >
               {footer}
             </div>
           )}

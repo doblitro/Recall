@@ -7,22 +7,22 @@ import {
   extractTextFromPart,
 } from "@/lib/connectors/gmail-body";
 import { GmailDetailItem } from "@/lib/connectors/types";
-import { gmailFetch } from "@/app/api/connectors/gmail/messages/route";
+import {
+  gmailFetch,
+  GmailMessage,
+} from "@/app/api/connectors/gmail/messages/route";
 
 async function fetchGmailMessageDetail(
   accessToken: string,
   id: string,
   keyword: string,
 ): Promise<GmailDetailItem> {
-  const data = await gmailFetch(accessToken, `/messages/${id}`, [
+  const data = await gmailFetch<GmailMessage>(accessToken, `/messages/${id}`, [
     ["format", "full"],
   ]);
 
   const headers = new Map<string, string>(
-    (data.payload?.headers ?? []).map((h: { name: string; value: string }) => [
-      h.name,
-      h.value,
-    ]),
+    (data.payload?.headers ?? []).map((h) => [h.name, h.value]),
   );
 
   const texts = extractTextFromPart(data.payload);
@@ -61,7 +61,10 @@ async function fetchGmailMessageDetail(
       toDisplay: highlightKeywordInResult(headers.get("To"), keyword),
       ccDisplay: highlightKeywordInResult(headers.get("Cc"), keyword),
       bccDisplay: highlightKeywordInResult(headers.get("Bcc"), keyword),
-      replyToDisplay: highlightKeywordInResult(headers.get("Reply-To"), keyword),
+      replyToDisplay: highlightKeywordInResult(
+        headers.get("Reply-To"),
+        keyword,
+      ),
       matchedInBody: false,
       bodyHtml: highlightKeywordInResult(bodyText, keyword) ?? "",
       attachments,

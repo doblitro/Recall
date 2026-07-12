@@ -1,8 +1,25 @@
 import { GOOGLE_DRIVE_PROVIDER_ID } from "@/lib/connectors/public";
 import { createSearchRoute } from "@/lib/connectors/search-route";
 import { highlightKeywordInResult } from "@/lib/connectors/highlight";
-import { formatParticipant, toParticipant } from "@/lib/connectors/participants";
+import {
+  formatParticipant,
+  toParticipant,
+} from "@/lib/connectors/participants";
 import { DriveListItem } from "@/lib/connectors/types";
+
+interface DriveApiFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  webViewLink?: string;
+  thumbnailLink?: string;
+  modifiedTime?: string;
+  owners?: { displayName?: string; emailAddress: string }[];
+}
+
+interface DriveApiFileList {
+  files?: DriveApiFile[];
+}
 
 async function searchDriveFiles(
   accessToken: string,
@@ -23,13 +40,13 @@ async function searchDriveFiles(
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
 
-  const data = await response.json();
+  const data: DriveApiFileList = await response.json();
 
   if (!response.ok) {
     throw new Error(`Drive API error: ${JSON.stringify(data)}`);
   }
 
-  const files: any[] = data.files ?? [];
+  const files = data.files ?? [];
 
   return files.map((file) => {
     const owners = (file.owners ?? []).map(toParticipant);

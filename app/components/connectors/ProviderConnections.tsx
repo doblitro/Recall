@@ -22,7 +22,8 @@ const ConnectorGroupCard = ({
   return (
     <div
       key={connector?.id}
-      className="border-accent-foreground bg-background flex w-full flex-col items-stretch gap-2 rounded-xl border p-4"
+      className="border-accent-foreground bg-background flex w-full flex-col
+        items-stretch gap-2 rounded-xl border p-4"
     >
       {connector && !isSkeleton ? (
         <>
@@ -70,7 +71,10 @@ const ProviderConnections = () => {
 
   return (
     <div className="relative flex w-full flex-col p-4">
-      <div className="bg-surface sticky top-0 isolate z-10 -mx-4 -mt-4 px-4 pt-4 pb-3">
+      <div
+        className="bg-surface sticky top-0 isolate z-10 -mx-4 -mt-4 px-4 pt-4
+          pb-3"
+      >
         <h3 className="text-sm font-bold">Connections</h3>
       </div>
       <div className="flex-1 space-y-2">

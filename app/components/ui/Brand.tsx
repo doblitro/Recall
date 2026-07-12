@@ -21,7 +21,8 @@ export function BrandTypeface({
       />
 
       <h1
-        className={`m-0 font-semibold tracking-tight ${compact ? "text-2xl" : "text-4xl"}`}
+        className={`m-0 font-semibold tracking-tight
+          ${compact ? "text-2xl" : "text-4xl"}`}
       >
         Recall
       </h1>

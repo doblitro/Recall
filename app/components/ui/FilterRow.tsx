@@ -24,7 +24,8 @@ const FilterButton = ({
   return (
     <button
       onClick={onClick}
-      className={`text-foreground flex items-center gap-1.5 rounded-xl px-2 py-1 hover:cursor-pointer ${isActive && activeButton}`}
+      className={`text-foreground flex items-center gap-1.5 rounded-xl px-2 py-1
+        hover:cursor-pointer ${isActive && activeButton}`}
     >
       {image && (
         <Image
@@ -38,7 +39,8 @@ const FilterButton = ({
       {label}
       {loading ? (
         <Loader
-          className="text-muted-foreground ml-1 inline size-3 animate-spin text-sm"
+          className="text-muted-foreground ml-1 inline size-3 animate-spin
+            text-sm"
           aria-label="Loading"
           role="status"
         />

@@ -3,7 +3,10 @@ import { getProvider } from "./registry";
 
 export const REFRESH_BUFFER_MS = 60_000;
 
-export async function getActiveIntegrations(userId: string, providerId: string) {
+export async function getActiveIntegrations(
+  userId: string,
+  providerId: string,
+) {
   const prisma = getPrismaClient();
   return prisma.integration.findMany({
     where: { userId, provider: providerId, isActive: true },

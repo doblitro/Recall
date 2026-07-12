@@ -1,7 +1,10 @@
 import { GOOGLE_DRIVE_PROVIDER_ID } from "@/lib/connectors/public";
 import { createDetailRoute } from "@/lib/connectors/search-route";
 import { highlightKeywordInResult } from "@/lib/connectors/highlight";
-import { formatParticipant, toParticipant } from "@/lib/connectors/participants";
+import {
+  formatParticipant,
+  toParticipant,
+} from "@/lib/connectors/participants";
 import { DriveDetailItem } from "@/lib/connectors/types";
 
 async function fetchDriveFileDetail(

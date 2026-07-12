@@ -62,7 +62,8 @@ const ConnectButtons = ({
           <div key={connection.id} className="w-full">
             <button
               onClick={() => handleDisconnect(connection.id)}
-              className="flex w-full items-center justify-between gap-2 py-2 text-xs"
+              className="flex w-full items-center justify-between gap-2 py-2
+                text-xs"
             >
               <div className="flex min-w-0 items-center gap-2">
                 <ActiveIndicator />
@@ -77,7 +78,9 @@ const ConnectButtons = ({
       </div>
       <button
         onClick={handleConnect}
-        className="bg-surface text-surface-foreground hover:bg-surface-hover flex w-full items-center justify-center border border-dashed p-2 text-xs"
+        className="bg-surface text-surface-foreground hover:bg-surface-hover
+          flex w-full items-center justify-center border border-dashed p-2
+          text-xs"
       >
         Add an account <PlusIcon width={14} height={14} />
       </button>

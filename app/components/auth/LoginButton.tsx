@@ -1,8 +1,7 @@
 "use client";
 
-import { LoaderIcon, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
-import Image from "next/image";
 import { Skeleton } from "../ui/Skeleton";
 
 const LoginButton = () => {
@@ -18,7 +17,9 @@ const LoginButton = () => {
           <Skeleton className="bg-surface-hover h-5 w-5" hasOwnBg={false} />
         </div>
       ) : session ? (
-        <div className="flex items-start justify-between gap-2 whitespace-nowrap">
+        <div
+          className="flex items-start justify-between gap-2 whitespace-nowrap"
+        >
           <p className="text-sm">
             Hi, {session.user?.name?.trim().split(" ")[0]}!
           </p>{" "}
@@ -29,7 +30,8 @@ const LoginButton = () => {
       ) : (
         <button
           onClick={() => signIn("google", { prompt: "select_account" })}
-          className="bg-accent text-accent-foreground hover:bg-accent-hover rounded px-4 py-2"
+          className="bg-accent text-accent-foreground hover:bg-accent-hover
+            rounded px-4 py-2"
         >
           Sign in with Google
         </button>

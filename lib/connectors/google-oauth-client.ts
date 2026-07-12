@@ -76,7 +76,9 @@ export async function fetchGoogleUserProfile(accessToken: string) {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch Google user profile: ${JSON.stringify(data)}`);
+    throw new Error(
+      `Failed to fetch Google user profile: ${JSON.stringify(data)}`,
+    );
   }
 
   return data as {

@@ -1,9 +1,39 @@
 import { GMAIL_PROVIDER_ID } from "@/lib/connectors/public";
 import { createSearchRoute } from "@/lib/connectors/search-route";
-import { buildKeywordRegex, highlightKeywordInResult } from "@/lib/connectors/highlight";
+import {
+  buildKeywordRegex,
+  highlightKeywordInResult,
+} from "@/lib/connectors/highlight";
 import { parseParticipants } from "@/lib/connectors/participants";
-import { decodePartText, extractTextFromPart } from "@/lib/connectors/gmail-body";
+import {
+  decodePartText,
+  extractTextFromPart,
+} from "@/lib/connectors/gmail-body";
 import { GmailListItem, GmailListMetadata } from "@/lib/connectors/types";
+
+interface GmailHeader {
+  name: string;
+  value: string;
+}
+
+interface GmailMessagePart {
+  headers?: GmailHeader[];
+  body?: { data?: string };
+  mimeType?: string;
+  parts?: GmailMessagePart[];
+}
+
+export interface GmailMessage {
+  id: string;
+  threadId?: string;
+  snippet?: string;
+  internalDate?: string;
+  payload?: GmailMessagePart;
+}
+
+interface GmailMessageList {
+  messages?: { id: string; threadId?: string }[];
+}
 
 const METADATA_HEADERS = [
   "Subject",
@@ -16,11 +46,11 @@ const METADATA_HEADERS = [
   "Reply-To",
 ];
 
-export async function gmailFetch(
+export async function gmailFetch<T = unknown>(
   accessToken: string,
   path: string,
   params: [string, string][] = [],
-) {
+): Promise<T> {
   const url = new URL(`https://gmail.googleapis.com/gmail/v1/users/me${path}`);
   for (const [key, value] of params) url.searchParams.append(key, value);
 
@@ -29,11 +59,11 @@ export async function gmailFetch(
   });
 
   const text = await response.text();
-  let data: any = null;
+  let data: unknown = null;
   if (text) {
     try {
       data = JSON.parse(text);
-    } catch (err) {
+    } catch {
       data = null;
     }
   }
@@ -45,21 +75,18 @@ export async function gmailFetch(
     );
   }
 
-  return data;
+  return data as T;
 }
 
-function headersMap(data: any): Map<string, string> {
+function headersMap(data: GmailMessage): Map<string, string> {
   return new Map<string, string>(
-    (data.payload?.headers ?? []).map((h: { name: string; value: string }) => [
-      h.name,
-      h.value,
-    ]),
+    (data.payload?.headers ?? []).map((h) => [h.name, h.value]),
   );
 }
 
 function buildMetadata(
   headers: Map<string, string>,
-  data: any,
+  data: GmailMessage,
   keyword: string,
   matchedInBody: boolean,
 ): GmailListMetadata {
@@ -88,9 +115,11 @@ async function relocateSnippetFromBody(
   const regex = buildKeywordRegex(keyword, "i");
   if (!regex) return highlightKeywordInResult(fallbackSnippet, keyword);
 
-  const data = await gmailFetch(accessToken, `/messages/${messageId}`, [
-    ["format", "full"],
-  ]);
+  const data = await gmailFetch<GmailMessage>(
+    accessToken,
+    `/messages/${messageId}`,
+    [["format", "full"]],
+  );
 
   const texts: string[] = [];
   if (data.payload?.body?.data)
@@ -116,20 +145,29 @@ async function searchGmailMessages(
   accessToken: string,
   keyword: string,
 ): Promise<GmailListItem[]> {
-  const listData = await gmailFetch(accessToken, "/messages", [
-    ["q", keyword],
-    ["maxResults", "20"],
-    ["fields", "messages(id, threadId)"],
-  ]);
+  const listData = await gmailFetch<GmailMessageList>(
+    accessToken,
+    "/messages",
+    [
+      ["q", keyword],
+      ["maxResults", "20"],
+      ["fields", "messages(id, threadId)"],
+    ],
+  );
 
-  const messages: { id: string; threadId?: string }[] = listData?.messages ?? [];
+  const messages = listData?.messages ?? [];
 
   return Promise.all(
     messages.map(async (message): Promise<GmailListItem> => {
       const params: [string, string][] = [["format", "metadata"]];
-      for (const header of METADATA_HEADERS) params.push(["metadataHeaders", header]);
+      for (const header of METADATA_HEADERS)
+        params.push(["metadataHeaders", header]);
 
-      const data = await gmailFetch(accessToken, `/messages/${message.id}`, params);
+      const data = await gmailFetch<GmailMessage>(
+        accessToken,
+        `/messages/${message.id}`,
+        params,
+      );
       const headers = headersMap(data);
 
       const regex = buildKeywordRegex(keyword, "i");
@@ -141,7 +179,9 @@ async function searchGmailMessages(
         headers.get("Cc") ?? "",
         headers.get("Bcc") ?? "",
       ];
-      const matchedInHeaders = regex ? candidates.some((c) => regex.test(c)) : false;
+      const matchedInHeaders = regex
+        ? candidates.some((c) => regex.test(c))
+        : false;
 
       const matchedInBody = !matchedInHeaders;
       const preview = matchedInHeaders

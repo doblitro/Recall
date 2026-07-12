@@ -12,7 +12,8 @@ export default async function Home() {
 
   return (
     <div
-      className={`flex h-dvh w-full overflow-x-hidden ${!session && "items-center justify-center"}`}
+      className={`flex h-dvh w-full overflow-x-hidden
+        ${!session && "items-center justify-center"}`}
     >
       {session ? (
         <>
