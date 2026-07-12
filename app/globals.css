@@ -9,6 +9,9 @@
   /* Ambient Glow */
   --ambient-glow: rgba(124, 140, 255, 0.08);
 
+  /* Elevation */
+  --search-shadow: rgba(111, 111, 111, 0.631);
+
   /* Text */
   --foreground: #f5f7fa;
   --muted-foreground: #98a2b3;
@@ -48,6 +51,9 @@
 
   /* Ambient Glow */
   --ambient-glow: rgba(99, 102, 241, 0.04);
+
+  /* Elevation */
+  --search-shadow: rgba(240, 0, 0, 0.1);
 
   /* Text */
   --foreground: #111827;

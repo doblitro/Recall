@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   GOOGLE_DRIVE_PROVIDER_ID,
   GMAIL_PROVIDER_ID,
@@ -16,6 +16,8 @@ import ResultCard from "./ResultCard";
 const Main = () => {
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isSearchSticky, setIsSearchSticky] = useState(false);
+  const searchBarRef = useRef<HTMLDivElement>(null);
 
   const [searchKeyword, debouncer] = useDebouncedValue(
     inputValue,
@@ -57,6 +59,21 @@ const Main = () => {
     return merged;
   }, [drive.items, gmail.items, activeProvider]);
 
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        setIsSearchSticky(!entry.isIntersecting);
+      },
+      { threshold: 1, rootMargin: "-16px 0px 0px 0px" },
+    );
+
+    if (searchBarRef.current) {
+      obs.observe(searchBarRef.current);
+    }
+
+    return () => obs.disconnect();
+  }, []);
+
   return (
     <div
       className={`flex min-h-screen w-full flex-col items-center px-4 transition-all duration-500 ease-out ${
@@ -65,8 +82,9 @@ const Main = () => {
           : "justify-center"
       }`}
     >
+      <div ref={searchBarRef} className="h-px w-full" />
       <div
-        className={`w-full max-w-3xl transition-all duration-500 ease-out ${
+        className={`sticky top-4 z-40 w-full max-w-3xl rounded-2xl p-2 backdrop-blur-md transition-all duration-500 ease-out ${isSearchSticky ? "bg-surface p-4 shadow-[0_0_15px_5px_var(--search-shadow)]" : "bg-transparent shadow-none"} ${
           hasStartedSearching || isSearching ? "scale-100" : "scale-105"
         }`}
       >
@@ -115,7 +133,6 @@ const Main = () => {
           </div>
         </div>
       </div>
-
       <div
         className={`my-8 flex w-full max-w-4xl flex-col gap-2 transition-all duration-300 ${
           hasStartedSearching
