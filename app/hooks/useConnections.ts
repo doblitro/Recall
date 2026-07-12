@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export type Connection = {
   id: string;
@@ -9,21 +9,32 @@ export type Connection = {
   connectedAt: string;
 };
 
-const useConnections = (provider: string) => {
-  const [connections, setConnections] = useState<Connection[]>([]);
+export type ConnectionsByProvider = Record<string, Connection[]>;
 
-  const refresh = useCallback(() => {
-    fetch(`/api/connectors/${provider}/status`)
-      .then((res) => res.json())
-      .then((data) => setConnections(data.connections ?? []))
-      .catch(() => setConnections([]));
-  }, [provider]);
+const CONNECTIONS_QUERY_KEY = ["connections-status"];
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+const useConnections = () => {
+  const queryClient = useQueryClient();
 
-  return { connections, refresh };
+  const { data, isLoading } = useQuery({
+    queryKey: CONNECTIONS_QUERY_KEY,
+    queryFn: async (): Promise<ConnectionsByProvider> => {
+      const response = await fetch("/api/connectors/status");
+      const data = await response.json();
+      return data.connections ?? {};
+    },
+    refetchOnWindowFocus: false,
+  });
+
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: CONNECTIONS_QUERY_KEY });
+  };
+
+  return {
+    connectionsByProvider: data ?? {},
+    refresh,
+    isLoading,
+  };
 };
 
 export default useConnections;

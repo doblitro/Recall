@@ -20,7 +20,7 @@ const FileDetail = ({
   error: string | null;
 }) => {
   if (loading) return <div className="py-2 text-sm">Loading…</div>;
-  if (error) return <div className="py-2 text-sm text-danger">{error}</div>;
+  if (error) return <div className="text-danger py-2 text-sm">{error}</div>;
   if (!detail) return null;
 
   const { metadata } = detail;
@@ -56,7 +56,8 @@ const FileDetail = ({
 const useDriveResults = (
   searchKeyword: string,
 ): { items: MergedResultItem[]; count: number; isFetching: boolean } => {
-  const { connections } = useConnections(GOOGLE_DRIVE_PROVIDER_ID);
+  const { connectionsByProvider } = useConnections();
+  const connections = connectionsByProvider[GOOGLE_DRIVE_PROVIDER_ID] ?? [];
   const { data: files, isFetching } = useConnectorSearch<DriveListItem>(
     `/api/connectors/${GOOGLE_DRIVE_PROVIDER_ID}/file`,
     "files",
@@ -81,10 +82,13 @@ const useDriveResults = (
       }
 
       setExpandedId(file.id ?? null);
-      fetchDetail(`/api/connectors/${GOOGLE_DRIVE_PROVIDER_ID}/file/${file.id}`, {
-        integrationId: file.integrationId,
-        keyword: searchKeyword,
-      });
+      fetchDetail(
+        `/api/connectors/${GOOGLE_DRIVE_PROVIDER_ID}/file/${file.id}`,
+        {
+          integrationId: file.integrationId,
+          keyword: searchKeyword,
+        },
+      );
     },
     [expandedId, reset, fetchDetail, searchKeyword],
   );

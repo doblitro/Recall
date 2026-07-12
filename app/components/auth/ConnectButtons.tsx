@@ -1,21 +1,23 @@
 "use client";
 
-import useConnections from "@/app/hooks/useConnections";
+import { Connection } from "@/app/hooks/useConnections";
 import { CONNECTOR_LIST } from "@/lib/connectors/public";
 import { LogOut, PlusIcon } from "lucide-react";
-import { useSession } from "next-auth/react";
 
 const ActiveIndicator = () => {
   return <div className="h-1.5 w-1.5 rounded-full bg-green-600" />;
 };
 
-const ConnectButtons = ({ type }: { type: string }) => {
-  const { data: session, status } = useSession();
-  const { connections, refresh } = useConnections(type);
+const ConnectButtons = ({
+  type,
+  connections,
+  onRefresh,
+}: {
+  type: string;
+  connections: Connection[];
+  onRefresh: () => void;
+}) => {
   const label = CONNECTOR_LIST.find((p) => p.id === type)?.label ?? type;
-
-  if (status === "loading") return <p>Checking session...</p>;
-  if (!session) return <p>Please log into the app first.</p>;
 
   const handleConnect = () => {
     fetch(`/api/connectors/${type}/connect`, {
@@ -46,7 +48,7 @@ const ConnectButtons = ({ type }: { type: string }) => {
         if (!response.ok) {
           throw new Error(`Failed to disconnect ${type}`);
         }
-        refresh();
+        onRefresh();
       })
       .catch((error) => {
         console.error(`Error disconnecting ${type}:`, error);

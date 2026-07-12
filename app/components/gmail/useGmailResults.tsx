@@ -20,7 +20,7 @@ const MessageDetail = ({
   error: string | null;
 }) => {
   if (loading) return <div className="py-2 text-sm">Loading…</div>;
-  if (error) return <div className="py-2 text-sm text-danger">{error}</div>;
+  if (error) return <div className="text-danger py-2 text-sm">{error}</div>;
   if (!detail) return null;
 
   const { metadata } = detail;
@@ -81,7 +81,8 @@ const MessageDetail = ({
 const useGmailResults = (
   searchKeyword: string,
 ): { items: MergedResultItem[]; count: number; isFetching: boolean } => {
-  const { connections } = useConnections(GMAIL_PROVIDER_ID);
+  const { connectionsByProvider } = useConnections();
+  const connections = connectionsByProvider[GMAIL_PROVIDER_ID] ?? [];
   const { data: messages, isFetching } = useConnectorSearch<GmailListItem>(
     `/api/connectors/${GMAIL_PROVIDER_ID}/messages`,
     "messages",
@@ -127,9 +128,7 @@ const useGmailResults = (
           provider={GMAIL_PROVIDER_ID}
           title={<LinkedTitle url={message.url} html={message.title} />}
           subtitle={
-            <div
-              dangerouslySetInnerHTML={{ __html: message.subtitle ?? "" }}
-            />
+            <div dangerouslySetInnerHTML={{ __html: message.subtitle ?? "" }} />
           }
           preview={
             <div dangerouslySetInnerHTML={{ __html: message.preview ?? "" }} />
