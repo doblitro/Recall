@@ -145,3 +145,34 @@ button {
   border-radius: 10px;
   white-space: no-wrap;
 }
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.15s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
