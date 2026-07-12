@@ -6,6 +6,9 @@
   --surface: #171a21;
   --surface-hover: #1f2430;
 
+  /* Ambient Glow */
+  --ambient-glow: rgba(124, 140, 255, 0.08);
+
   /* Text */
   --foreground: #f5f7fa;
   --muted-foreground: #98a2b3;
@@ -42,6 +45,9 @@
   --background: #f6f7f9;
   --surface: #ffffff;
   --surface-hover: #f3f5f7;
+
+  /* Ambient Glow */
+  --ambient-glow: rgba(99, 102, 241, 0.04);
 
   /* Text */
   --foreground: #111827;
@@ -101,8 +107,8 @@
   --color-warning: var(--warning);
 
   /* Fonts */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
 }
 
 html,
@@ -113,14 +119,13 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Subtle ambient glow */
   background-image: radial-gradient(
     circle at top,
-    rgba(124, 140, 255, 0.08),
+    var(--ambient-glow),
     transparent 45%
   );
 }
@@ -143,9 +148,10 @@ mark {
 
 button {
   border-radius: 10px;
-  white-space: no-wrap;
+  white-space: nowrap;
 }
 
+/* Scrollbar styling */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;

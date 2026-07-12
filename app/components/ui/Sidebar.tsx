@@ -89,11 +89,11 @@ const Sidebar = () => {
         }`}
       >
         <div className="flex h-full w-full flex-col justify-between">
-          <div>
+          <div className="flex min-h-0 flex-1 flex-col">
             <div className="border-b p-4">
               <BrandTypeface compact />
             </div>
-            <div className="min-h-0 overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-y-auto">
               <ProviderConnections />
             </div>
           </div>

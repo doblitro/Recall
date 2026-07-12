@@ -16,7 +16,7 @@ const FilterButton = ({
   image?: string | undefined;
   count?: number;
   loading?: boolean;
-  onClick: () => any;
+  onClick: () => void;
   isActive: boolean;
 }) => {
   const activeButton = "border-2 border-input shadow-input";
@@ -24,20 +24,26 @@ const FilterButton = ({
   return (
     <button
       onClick={onClick}
-      className={`px-2 py-1 rounded-xl text-foreground flex items-center gap-1.5 hover:cursor-pointer ${isActive && activeButton}`}
+      className={`text-foreground flex items-center gap-1.5 rounded-xl px-2 py-1 hover:cursor-pointer ${isActive && activeButton}`}
     >
       {image && (
-        <Image src={image} alt={`${label} Logo`} width={20} height={20} />
+        <Image
+          src={image}
+          alt={`${label} Logo`}
+          width={20}
+          height={20}
+          draggable={false}
+        />
       )}
       {label}
       {loading ? (
         <Loader
-          className="text-sm ml-1 inline size-3 animate-spin text-muted-foreground"
+          className="text-muted-foreground ml-1 inline size-3 animate-spin text-sm"
           aria-label="Loading"
           role="status"
         />
       ) : (
-        count !== undefined && <span className="text-xs ml-0.5">{count}</span>
+        count !== undefined && <span className="ml-0.5 text-xs">{count}</span>
       )}
     </button>
   );
