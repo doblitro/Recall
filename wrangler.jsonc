@@ -1,9 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "recall",
-  "main": ".open-next/worker.js",
+  "main": "worker.ts",
   "compatibility_date": "2026-07-08",
   "compatibility_flags": ["nodejs_compat"],
+  "triggers": {
+    "crons": ["*/20 * * * *"],
+  },
   "vars": {
     "NEXTAUTH_URL": "https://recall.project1of1.com",
   },
