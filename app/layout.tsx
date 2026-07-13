@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Geist } from "next/font/google";
+import { Toaster } from "sonner";
 import Providers from "./providers/Providers";
 
 const geist = Geist({
@@ -84,6 +85,7 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className={`flex min-h-full flex-col ${geist.className}`}>
         <Providers>{children}</Providers>
+        <Toaster richColors closeButton />
       </body>
     </html>
   );

@@ -1,6 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { SearchErrorEntry } from "@/lib/connectors/types";
+
+interface ConnectorSearchResult<T> {
+  items: T[];
+  errors: SearchErrorEntry[];
+}
 
 const useConnectorSearch = <T>(
   endpoint: string,
@@ -9,20 +15,29 @@ const useConnectorSearch = <T>(
 ) => {
   const { data, isFetching } = useQuery({
     queryKey: [endpoint, itemsKey, searchKeyword],
-    queryFn: async ({ signal }) => {
+    queryFn: async ({ signal }): Promise<ConnectorSearchResult<T>> => {
       const response = await fetch(`${endpoint}?keyword=${searchKeyword}`, {
         signal,
       });
-      if (!response.ok) throw new Error(`Failed to fetch ${itemsKey}`);
-      const data = await response.json();
-      return (data[itemsKey] || []) as T[];
+      const json = await response.json();
+      if (!response.ok && !json?.errors) {
+        throw new Error(`Failed to fetch ${itemsKey}`);
+      }
+      return {
+        items: (json[itemsKey] || []) as T[],
+        errors: (json.errors || []) as SearchErrorEntry[],
+      };
     },
     enabled: !!searchKeyword,
     retry: false,
     refetchOnWindowFocus: false,
   });
 
-  return { data: data ?? [], isFetching };
+  return {
+    data: data?.items ?? [],
+    errors: data?.errors ?? [],
+    isFetching,
+  };
 };
 
 export default useConnectorSearch;

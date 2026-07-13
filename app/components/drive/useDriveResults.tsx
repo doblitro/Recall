@@ -6,7 +6,11 @@ import { GOOGLE_DRIVE_PROVIDER_ID } from "@/lib/connectors/public";
 import useConnectorSearch from "@/app/hooks/useConnectorSearch";
 import useConnectorDetail from "@/app/hooks/useConnectorDetail";
 import useConnections from "@/app/hooks/useConnections";
-import { DriveListItem, DriveDetailItem } from "@/lib/connectors/types";
+import {
+  DriveListItem,
+  DriveDetailItem,
+  SearchErrorEntry,
+} from "@/lib/connectors/types";
 import LinkedTitle from "../ui/LinkedTitle";
 import { MergedResultItem } from "../results/types";
 
@@ -55,10 +59,19 @@ const FileDetail = ({
 
 const useDriveResults = (
   searchKeyword: string,
-): { items: MergedResultItem[]; count: number; isFetching: boolean } => {
+): {
+  items: MergedResultItem[];
+  count: number;
+  isFetching: boolean;
+  errors: SearchErrorEntry[];
+} => {
   const { connectionsByProvider } = useConnections();
   const connections = connectionsByProvider[GOOGLE_DRIVE_PROVIDER_ID] ?? [];
-  const { data: files, isFetching } = useConnectorSearch<DriveListItem>(
+  const {
+    data: files,
+    errors,
+    isFetching,
+  } = useConnectorSearch<DriveListItem>(
     `/api/connectors/${GOOGLE_DRIVE_PROVIDER_ID}/file`,
     "files",
     searchKeyword,
@@ -132,6 +145,7 @@ const useDriveResults = (
     items,
     count: items.length,
     isFetching: connections.length > 0 && isFetching,
+    errors,
   };
 };
 

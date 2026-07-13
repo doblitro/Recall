@@ -4,7 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   GOOGLE_DRIVE_PROVIDER_ID,
   GMAIL_PROVIDER_ID,
+  CONNECTOR_LIST,
 } from "@/lib/connectors/public";
+import { initiateOAuthConnect } from "@/lib/connectors/client-connect";
+import { SearchErrorEntry } from "@/lib/connectors/types";
 import useDriveResults from "../drive/useDriveResults";
 import useGmailResults from "../gmail/useGmailResults";
 import { useSearchFilter } from "@/app/providers/SearchFilterProvider";
@@ -12,6 +15,7 @@ import FilterRow from "./FilterRow";
 import { useDebouncedValue } from "@tanstack/react-pacer";
 import { Search, X } from "lucide-react";
 import ResultCard from "./ResultCard";
+import { toast } from "sonner";
 
 const Main = () => {
   const [inputValue, setInputValue] = useState("");
@@ -60,6 +64,44 @@ const Main = () => {
 
     return merged;
   }, [drive.items, gmail.items, activeProvider]);
+
+  const toastedFailuresRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const notify = (providerId: string, error: SearchErrorEntry) => {
+      const signature = `${error.integrationId}:${error.reason}`;
+      if (toastedFailuresRef.current.has(signature)) return;
+      toastedFailuresRef.current.add(signature);
+
+      const label =
+        CONNECTOR_LIST.find((c) => c.id === providerId)?.label ?? providerId;
+      const account = error.accountEmail ?? "an account";
+
+      if (error.reason === "reauth_required") {
+        toast.error(`Couldn't search ${account} (${label})`, {
+          description: "This account needs to be reconnected.",
+          action: {
+            label: "Reconnect",
+            onClick: () => {
+              initiateOAuthConnect(providerId).catch((connectError) => {
+                console.error(
+                  `Error initiating ${providerId} OAuth:`,
+                  connectError,
+                );
+              });
+            },
+          },
+        });
+      } else {
+        toast.error(`${label} search temporarily unavailable`, {
+          description: `Couldn't search ${account} right now — try again shortly.`,
+        });
+      }
+    };
+
+    drive.errors.forEach((error) => notify(GOOGLE_DRIVE_PROVIDER_ID, error));
+    gmail.errors.forEach((error) => notify(GMAIL_PROVIDER_ID, error));
+  }, [drive.errors, gmail.errors]);
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -160,7 +202,11 @@ const Main = () => {
       >
         {!isSearching ? (
           <div key="results" className="animate-fade-in flex flex-col gap-2">
-            {results.map((item) => item.card)}
+            {results.length > 0 ? (
+              results.map((item) => item.card)
+            ) : (
+              <p className="text-foreground/50">No results.</p>
+            )}
           </div>
         ) : (
           <div key="skeletons" className="animate-fade-in flex flex-col gap-2">

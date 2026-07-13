@@ -6,7 +6,11 @@ import { GMAIL_PROVIDER_ID } from "@/lib/connectors/public";
 import useConnectorSearch from "@/app/hooks/useConnectorSearch";
 import useConnectorDetail from "@/app/hooks/useConnectorDetail";
 import useConnections from "@/app/hooks/useConnections";
-import { GmailListItem, GmailDetailItem } from "@/lib/connectors/types";
+import {
+  GmailListItem,
+  GmailDetailItem,
+  SearchErrorEntry,
+} from "@/lib/connectors/types";
 import LinkedTitle from "../ui/LinkedTitle";
 import { MergedResultItem } from "../results/types";
 
@@ -80,10 +84,19 @@ const MessageDetail = ({
 
 const useGmailResults = (
   searchKeyword: string,
-): { items: MergedResultItem[]; count: number; isFetching: boolean } => {
+): {
+  items: MergedResultItem[];
+  count: number;
+  isFetching: boolean;
+  errors: SearchErrorEntry[];
+} => {
   const { connectionsByProvider } = useConnections();
   const connections = connectionsByProvider[GMAIL_PROVIDER_ID] ?? [];
-  const { data: messages, isFetching } = useConnectorSearch<GmailListItem>(
+  const {
+    data: messages,
+    errors,
+    isFetching,
+  } = useConnectorSearch<GmailListItem>(
     `/api/connectors/${GMAIL_PROVIDER_ID}/messages`,
     "messages",
     searchKeyword,
@@ -159,6 +172,7 @@ const useGmailResults = (
     items,
     count: items.length,
     isFetching: connections.length > 0 && isFetching,
+    errors,
   };
 };
 
