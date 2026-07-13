@@ -26,12 +26,14 @@ const Main = () => {
   );
 
   const hasStartedSearching = inputValue.trim().length > 0;
-  const isSearching = debouncer.state.isPending;
 
   const { activeProvider, setActiveProvider } = useSearchFilter();
 
   const drive = useDriveResults(searchKeyword);
   const gmail = useGmailResults(searchKeyword);
+
+  const isSearching =
+    debouncer.state.isPending || drive.isFetching || gmail.isFetching;
 
   const counts = searchKeyword
     ? {
@@ -157,28 +159,33 @@ const Main = () => {
           }`}
       >
         {!isSearching ? (
-          results.map((item) => item.card)
+          <div key="results" className="animate-fade-in flex flex-col gap-2">
+            {results.map((item) => item.card)}
+          </div>
         ) : (
-          <>
+          <div key="skeletons" className="animate-fade-in flex flex-col gap-2">
             <ResultCard
+              key="skeleton-0"
               provider={""}
               title={undefined}
               expanded={false}
               isSkeleton
             />
             <ResultCard
+              key="skeleton-1"
               provider={""}
               title={undefined}
               expanded={false}
               isSkeleton
             />
             <ResultCard
+              key="skeleton-2"
               provider={""}
               title={undefined}
               expanded={false}
               isSkeleton
             />
-          </>
+          </div>
         )}
       </div>
     </div>

@@ -39,13 +39,18 @@ const FilterButton = ({
       {label}
       {loading ? (
         <Loader
+          key="loading"
           className="text-muted-foreground ml-1 inline size-3 animate-spin
             text-sm"
           aria-label="Loading"
           role="status"
         />
       ) : (
-        count !== undefined && <span className="ml-0.5 text-xs">{count}</span>
+        count !== undefined && (
+          <span key="count" className="animate-fade-in ml-0.5 text-xs">
+            {count}
+          </span>
+        )
       )}
     </button>
   );
