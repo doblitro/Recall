@@ -17,6 +17,7 @@ import { ChevronDown, Search, X } from "lucide-react";
 import ResultCard from "./ResultCard";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
+import Dialog from "./Dialog";
 
 const Results = dynamic(() => import("./ResultsContainer"));
 

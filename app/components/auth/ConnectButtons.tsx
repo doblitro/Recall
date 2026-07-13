@@ -4,6 +4,8 @@ import { Connection } from "@/app/hooks/useConnections";
 import { CONNECTOR_LIST } from "@/lib/connectors/public";
 import { initiateOAuthConnect } from "@/lib/connectors/client-connect";
 import { LogOut, PlusIcon } from "lucide-react";
+import Dialog from "../ui/Dialog";
+import { useState } from "react";
 
 const ActiveIndicator = () => {
   return <div className="h-1.5 w-1.5 rounded-full bg-green-600" />;
@@ -19,11 +21,18 @@ const ConnectButtons = ({
   onRefresh: () => void;
 }) => {
   const label = CONNECTOR_LIST.find((p) => p.id === type)?.label ?? type;
+  const [isOpen, setIsDialogOpen] = useState(false);
+  const [accountChosen, setAccountChosen] = useState<Connection | null>(null);
 
   const handleConnect = () => {
     initiateOAuthConnect(type).catch((error) => {
       console.error(`Error initiating ${type} OAuth:`, error);
     });
+  };
+
+  const closeDialog = () => {
+    setIsDialogOpen(false);
+    setAccountChosen(null);
   };
 
   const handleDisconnect = (integrationId: string) => {
@@ -44,35 +53,70 @@ const ConnectButtons = ({
   };
 
   return (
-    <div className="flex w-full flex-col items-stretch gap-2">
-      <div className="p-1">
-        {connections.map((connection) => (
-          <div key={connection.id} className="w-full">
-            <button
-              onClick={() => handleDisconnect(connection.id)}
-              className="flex w-full items-center justify-between gap-2 py-2
-                text-xs"
-            >
-              <div className="flex min-w-0 items-center gap-2">
-                <ActiveIndicator />
-                <span className="min-w-0 truncate">
-                  {connection.accountEmail ?? label}
-                </span>
-              </div>
-              <LogOut className="h-3 w-3 shrink-0 rotate-180" />
-            </button>
-          </div>
-        ))}
+    <>
+      <div className="flex w-full flex-col items-stretch gap-2">
+        <div className="p-1">
+          {connections.map((connection) => (
+            <div key={connection.id} className="w-full">
+              <button
+                className="flex w-full items-center justify-between gap-2 py-2
+                  text-xs"
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  <ActiveIndicator />
+                  <span className="min-w-0 truncate">
+                    {connection.accountEmail ?? label}
+                  </span>
+                </div>
+                <LogOut
+                  onClick={() => {
+                    setIsDialogOpen(true);
+                    setAccountChosen(connection);
+                  }}
+                  className="h-3 w-3 shrink-0 rotate-180"
+                />
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={handleConnect}
+          className="bg-surface text-surface-foreground hover:bg-surface-hover
+            flex w-full items-center justify-center border border-dashed p-2
+            text-xs"
+        >
+          Add an account <PlusIcon width={14} height={14} />
+        </button>
       </div>
-      <button
-        onClick={handleConnect}
-        className="bg-surface text-surface-foreground hover:bg-surface-hover
-          flex w-full items-center justify-center border border-dashed p-2
-          text-xs"
-      >
-        Add an account <PlusIcon width={14} height={14} />
-      </button>
-    </div>
+
+      <Dialog
+        isOpen={isOpen}
+        type={"warning"}
+        message={`Are you sure you want to remove ${label} account — ${accountChosen?.accountEmail ?? "this account"}?`}
+        onClose={closeDialog}
+        buttons={
+          <>
+            <button
+              onClick={closeDialog}
+              className="border-border text-foreground hover:bg-surface-hover
+                flex-1 rounded border px-3 py-1.5 text-xs font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                if (accountChosen) handleDisconnect(accountChosen.id);
+                closeDialog();
+              }}
+              className="bg-danger hover:bg-danger-hover text-danger-foreground
+                flex-1 rounded px-3 py-1.5 text-xs font-medium"
+            >
+              Remove
+            </button>
+          </>
+        }
+      />
+    </>
   );
 };
 
