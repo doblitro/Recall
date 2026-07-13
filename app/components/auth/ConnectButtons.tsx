@@ -2,6 +2,7 @@
 
 import { Connection } from "@/app/hooks/useConnections";
 import { CONNECTOR_LIST } from "@/lib/connectors/public";
+import { initiateOAuthConnect } from "@/lib/connectors/client-connect";
 import { LogOut, PlusIcon } from "lucide-react";
 
 const ActiveIndicator = () => {
@@ -20,22 +21,9 @@ const ConnectButtons = ({
   const label = CONNECTOR_LIST.find((p) => p.id === type)?.label ?? type;
 
   const handleConnect = () => {
-    fetch(`/api/connectors/${type}/connect`, {
-      method: "POST",
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to initiate ${type} OAuth`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        const { authUrl } = data;
-        window.location.href = authUrl;
-      })
-      .catch((error) => {
-        console.error(`Error initiating ${type} OAuth:`, error);
-      });
+    initiateOAuthConnect(type).catch((error) => {
+      console.error(`Error initiating ${type} OAuth:`, error);
+    });
   };
 
   const handleDisconnect = (integrationId: string) => {
