@@ -2,8 +2,9 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { readAndClearOAuthStateCookie } from "@/lib/connectors/oauth-state";
 import { getProvider } from "@/lib/connectors/registry";
 import { getPrismaClient } from "@/lib/prisma/client";
+import { runSyncForIntegration } from "@/lib/sync/orchestrator";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 
 export async function GET(
   request: Request,
@@ -60,7 +61,7 @@ export async function GET(
   let tokens;
   try {
     tokens = await provider?.exchangeCodeForTokens(code);
-  } catch (err: any) {
+  } catch (err) {
     console.error(err);
   }
 
@@ -102,7 +103,7 @@ export async function GET(
     });
   }
 
-  await prisma.integration.upsert({
+  const integration = await prisma.integration.upsert({
     where: {
       provider_providerAccountId: {
         provider: providerId,
@@ -132,6 +133,11 @@ export async function GET(
       isActive: true,
     },
   });
+
+  // Kick off an initial sync without blocking the redirect response — after()
+  // maps onto ctx.waitUntil on Cloudflare/OpenNext, so this keeps running
+  // once the response has been sent.
+  after(() => runSyncForIntegration(integration.id));
 
   return new Response(null, {
     status: 302,
