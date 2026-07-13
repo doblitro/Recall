@@ -7,10 +7,7 @@ import {
   extractTextFromPart,
 } from "@/lib/connectors/gmail-body";
 import { GmailDetailItem } from "@/lib/connectors/types";
-import {
-  gmailFetch,
-  GmailMessage,
-} from "@/app/api/connectors/gmail/messages/route";
+import { gmailFetch, GmailMessage } from "@/lib/connectors/gmail-client";
 
 async function fetchGmailMessageDetail(
   accessToken: string,

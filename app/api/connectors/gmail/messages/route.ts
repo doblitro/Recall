@@ -10,28 +10,7 @@ import {
   extractTextFromPart,
 } from "@/lib/connectors/gmail-body";
 import { GmailListItem, GmailListMetadata } from "@/lib/connectors/types";
-import { fetchWithRateLimitRetry } from "@/lib/connectors/google-oauth-client";
-import { GoogleAuthRequiredError } from "@/lib/connectors/errors";
-
-interface GmailHeader {
-  name: string;
-  value: string;
-}
-
-interface GmailMessagePart {
-  headers?: GmailHeader[];
-  body?: { data?: string };
-  mimeType?: string;
-  parts?: GmailMessagePart[];
-}
-
-export interface GmailMessage {
-  id: string;
-  threadId?: string;
-  snippet?: string;
-  internalDate?: string;
-  payload?: GmailMessagePart;
-}
+import { gmailFetch, GmailMessage } from "@/lib/connectors/gmail-client";
 
 interface GmailMessageList {
   messages?: { id: string; threadId?: string }[];
@@ -50,41 +29,6 @@ const METADATA_HEADERS = [
   "Message-ID",
   "Reply-To",
 ];
-
-export async function gmailFetch<T = unknown>(
-  accessToken: string,
-  path: string,
-  params: [string, string][] = [],
-): Promise<T> {
-  const url = new URL(`https://gmail.googleapis.com/gmail/v1/users/me${path}`);
-  for (const [key, value] of params) url.searchParams.append(key, value);
-
-  const response = await fetchWithRateLimitRetry(GMAIL_PROVIDER_ID, () =>
-    fetch(url, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }),
-  );
-
-  const text = await response.text();
-  let data: unknown = null;
-  if (text) {
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = null;
-    }
-  }
-
-  if (response.status === 401 || response.status === 403) {
-    throw new GoogleAuthRequiredError(GMAIL_PROVIDER_ID);
-  }
-
-  if (!response.ok) {
-    throw new Error(`Gmail API error: status ${response.status}`);
-  }
-
-  return data as T;
-}
 
 function headersMap(data: GmailMessage): Map<string, string> {
   return new Map<string, string>(
