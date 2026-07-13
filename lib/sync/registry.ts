@@ -1,7 +1,11 @@
 import { gmailSyncAdapter } from "./gmail-sync";
+import { driveSyncAdapter } from "./drive-sync";
 import { SyncAdapter } from "./types";
 
-export const syncAdaptersArray: SyncAdapter[] = [gmailSyncAdapter];
+export const syncAdaptersArray: SyncAdapter[] = [
+  gmailSyncAdapter,
+  driveSyncAdapter,
+];
 
 export const syncAdaptersRecord: Record<string, SyncAdapter> =
   syncAdaptersArray.reduce(
