@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { MergedResultItem } from "../results/types";
-import { ChevronDown } from "lucide-react";
 
-const PAGE_SIZE = 30;
-
-const ResultsContainer = ({ results }: { results: MergedResultItem[] }) => {
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-
+const ResultsContainer = ({
+  results,
+  hasMore,
+  isLoadingMore,
+  onLoadMore,
+}: {
+  results: MergedResultItem[];
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  onLoadMore: () => void;
+}) => {
   if (results.length === 0) {
     return (
       <div key="results" className="animate-fade-in w-full text-center">
@@ -17,21 +21,20 @@ const ResultsContainer = ({ results }: { results: MergedResultItem[] }) => {
     );
   }
 
-  const visibleResults = results.slice(0, visibleCount);
-  const hasMore = visibleCount < results.length;
-
   return (
     <div key="results" className="animate-fade-in flex flex-col gap-2">
-      {visibleResults.map((item) => item.card)}
+      {results.map((item) => item.card)}
 
       {hasMore && (
         <button
           type="button"
-          onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+          onClick={onLoadMore}
+          disabled={isLoadingMore}
           className="text-muted-foreground hover:text-foreground mt-2 w-fit
-            cursor-pointer self-center py-2 text-sm transition-colors"
+            cursor-pointer self-center py-2 text-sm transition-colors
+            disabled:opacity-50"
         >
-          Load {PAGE_SIZE} more ({visibleCount}/{results.length - visibleCount})
+          {isLoadingMore ? "Loading…" : "Load more"}
         </button>
       )}
     </div>

@@ -1,23 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  GOOGLE_DRIVE_PROVIDER_ID,
-  GMAIL_PROVIDER_ID,
-  CONNECTOR_LIST,
-} from "@/lib/connectors/public";
-import { initiateOAuthConnect } from "@/lib/connectors/client-connect";
-import { SearchErrorEntry } from "@/lib/connectors/types";
-import useDriveResults from "../drive/useDriveResults";
-import useGmailResults from "../gmail/useGmailResults";
+import { useEffect, useRef, useState } from "react";
 import { useSearchFilter } from "@/app/providers/SearchFilterProvider";
+import useSearchResults from "@/app/hooks/useSearchResults";
 import FilterRow from "./FilterRow";
 import { useDebouncedValue } from "@tanstack/react-pacer";
 import { ChevronDown, Search, X } from "lucide-react";
 import ResultCard from "./ResultCard";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
-import Dialog from "./Dialog";
 
 const Results = dynamic(() => import("./ResultsContainer"));
 
@@ -44,82 +35,28 @@ const Main = () => {
 
   const { activeProvider, setActiveProvider } = useSearchFilter();
 
-  const drive = useDriveResults(searchKeyword);
-  const gmail = useGmailResults(searchKeyword);
+  const {
+    items: results,
+    isFetching,
+    isFetchingNextPage,
+    hasMore,
+    loadMore,
+    isError,
+  } = useSearchResults(searchKeyword, activeProvider);
 
-  const isSearching =
-    debouncer.state.isPending || drive.isFetching || gmail.isFetching;
+  const isSearching = debouncer.state.isPending || isFetching;
 
-  const counts = searchKeyword
-    ? {
-        [GOOGLE_DRIVE_PROVIDER_ID]: drive.count,
-        [GMAIL_PROVIDER_ID]: gmail.count,
-      }
-    : undefined;
-
-  const loadingByProvider = {
-    [GOOGLE_DRIVE_PROVIDER_ID]: drive.isFetching,
-    [GMAIL_PROVIDER_ID]: gmail.isFetching,
-  };
-
-  const results = useMemo(() => {
-    const seen = new Set<string>();
-    const merged = [...drive.items, ...gmail.items].filter((item) => {
-      if (activeProvider !== null && item.provider !== activeProvider)
-        return false;
-
-      const key = `${item.provider}:${item.id}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    merged.sort((a, b) => {
-      const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-      const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-      return bTime - aTime;
-    });
-
-    return merged;
-  }, [drive.items, gmail.items, activeProvider]);
-
-  const toastedFailuresRef = useRef<Set<string>>(new Set());
+  const hasToastedErrorRef = useRef(false);
 
   useEffect(() => {
-    const notify = (providerId: string, error: SearchErrorEntry) => {
-      const signature = `${error.integrationId}:${error.reason}`;
-      if (toastedFailuresRef.current.has(signature)) return;
-      toastedFailuresRef.current.add(signature);
-
-      const label =
-        CONNECTOR_LIST.find((c) => c.id === providerId)?.label ?? providerId;
-      const account = error.accountEmail ?? "an account";
-
-      if (error.reason === "reauth_required") {
-        toast.error(`Couldn't search ${account} (${label})`, {
-          description: "This account needs to be reconnected.",
-          action: {
-            label: "Reconnect",
-            onClick: () => {
-              initiateOAuthConnect(providerId).catch((connectError) => {
-                console.error(
-                  `Error initiating ${providerId} OAuth:`,
-                  connectError,
-                );
-              });
-            },
-          },
-        });
-      } else {
-        toast.error(`${label} search temporarily unavailable`, {
-          description: `Couldn't search ${account} right now — try again shortly.`,
-        });
-      }
-    };
-
-    drive.errors.forEach((error) => notify(GOOGLE_DRIVE_PROVIDER_ID, error));
-    gmail.errors.forEach((error) => notify(GMAIL_PROVIDER_ID, error));
-  }, [drive.errors, gmail.errors]);
+    if (isError && !hasToastedErrorRef.current) {
+      hasToastedErrorRef.current = true;
+      toast.error("Search failed", {
+        description: "Something went wrong — try again shortly.",
+      });
+    }
+    if (!isError) hasToastedErrorRef.current = false;
+  }, [isError]);
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -225,9 +162,7 @@ const Main = () => {
             <FilterRow
               activeProvider={activeProvider}
               setActiveProvider={setActiveProvider}
-              counts={counts}
               isSearching={isSearching}
-              loadingByProvider={loadingByProvider}
             />
           </div>
         </div>
@@ -241,7 +176,12 @@ const Main = () => {
           }`}
       >
         {!isSearching ? (
-          <Results results={results} />
+          <Results
+            results={results}
+            hasMore={hasMore}
+            isLoadingMore={isFetchingNextPage}
+            onLoadMore={loadMore}
+          />
         ) : (
           <div key="skeletons" className="animate-fade-in flex flex-col gap-2">
             <ResultCard
