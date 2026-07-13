@@ -35,7 +35,10 @@ export interface GmailMessage {
 
 interface GmailMessageList {
   messages?: { id: string; threadId?: string }[];
+  nextPageToken?: string;
 }
+
+const MAX_RESULTS_PER_ACCOUNT = 200;
 
 const METADATA_HEADERS = [
   "Subject",
@@ -150,17 +153,26 @@ async function searchGmailMessages(
   accessToken: string,
   keyword: string,
 ): Promise<GmailListItem[]> {
-  const listData = await gmailFetch<GmailMessageList>(
-    accessToken,
-    "/messages",
-    [
+  const messages: { id: string; threadId?: string }[] = [];
+  let pageToken: string | undefined;
+
+  do {
+    const params: [string, string][] = [
       ["q", keyword],
       ["maxResults", "20"],
-      ["fields", "messages(id, threadId)"],
-    ],
-  );
+      ["fields", "messages(id, threadId), nextPageToken"],
+    ];
+    if (pageToken) params.push(["pageToken", pageToken]);
 
-  const messages = listData?.messages ?? [];
+    const listData = await gmailFetch<GmailMessageList>(
+      accessToken,
+      "/messages",
+      params,
+    );
+
+    messages.push(...(listData?.messages ?? []));
+    pageToken = listData?.nextPageToken;
+  } while (pageToken && messages.length < MAX_RESULTS_PER_ACCOUNT);
 
   return Promise.all(
     messages.map(async (message): Promise<GmailListItem> => {

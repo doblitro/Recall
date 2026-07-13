@@ -21,21 +21,23 @@ interface DriveApiFile {
 
 interface DriveApiFileList {
   files?: DriveApiFile[];
+  nextPageToken?: string;
 }
 
-async function searchDriveFiles(
-  accessToken: string,
-  keyword: string,
-): Promise<DriveListItem[]> {
-  const sanitizedKeyword = keyword.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-  const q = `name contains '${sanitizedKeyword}' and trashed = false`;
+const MAX_RESULTS_PER_ACCOUNT = 200;
 
+async function fetchDriveFilesPage(
+  accessToken: string,
+  q: string,
+  pageToken?: string,
+): Promise<DriveApiFileList> {
   const params = new URLSearchParams({
     q,
     pageSize: "20",
     fields:
-      "files(id, name, mimeType, webViewLink, thumbnailLink, modifiedTime, owners)",
+      "files(id, name, mimeType, webViewLink, thumbnailLink, modifiedTime, owners), nextPageToken",
   });
+  if (pageToken) params.set("pageToken", pageToken);
 
   const response = await fetchWithRateLimitRetry(GOOGLE_DRIVE_PROVIDER_ID, () =>
     fetch(`https://www.googleapis.com/drive/v3/files?${params.toString()}`, {
@@ -61,9 +63,24 @@ async function searchDriveFiles(
     throw new Error(`Drive API error: status ${response.status}`);
   }
 
-  data ??= {};
+  return data ?? {};
+}
 
-  const files = data.files ?? [];
+async function searchDriveFiles(
+  accessToken: string,
+  keyword: string,
+): Promise<DriveListItem[]> {
+  const sanitizedKeyword = keyword.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  const q = `name contains '${sanitizedKeyword}' and trashed = false`;
+
+  const files: DriveApiFile[] = [];
+  let pageToken: string | undefined;
+
+  do {
+    const data = await fetchDriveFilesPage(accessToken, q, pageToken);
+    files.push(...(data.files ?? []));
+    pageToken = data.nextPageToken;
+  } while (pageToken && files.length < MAX_RESULTS_PER_ACCOUNT);
 
   return files.map((file) => {
     const owners = (file.owners ?? []).map(toParticipant);
