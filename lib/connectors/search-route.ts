@@ -1,4 +1,3 @@
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import {
   getActiveIntegrations,
   getValidAccessToken,
@@ -9,7 +8,7 @@ import {
   GoogleAuthRequiredError,
 } from "@/lib/connectors/errors";
 import { getPrismaClient } from "@/lib/prisma/client";
-import { getServerSession } from "next-auth";
+import { resolveSessionUser } from "@/lib/auth/session";
 import { NextRequest, NextResponse } from "next/server";
 import { SearchFailureReason, SearchErrorEntry } from "@/lib/connectors/types";
 
@@ -18,49 +17,6 @@ function reasonFor(error: unknown): SearchFailureReason {
   if (error instanceof GoogleAuthRequiredError) return "reauth_required";
   if (error instanceof RateLimitedError) return "rate_limited";
   return "fetch_failed";
-}
-
-async function resolveSessionUser(): Promise<
-  { user: { id: string; email: string } } | { redirect: NextResponse }
-> {
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    console.error("No logged in user.");
-    return {
-      redirect: new NextResponse(null, {
-        status: 302,
-        headers: { Location: "/?session_error=missing" },
-      }),
-    };
-  }
-
-  if (!session.user?.email) {
-    console.error("Session missing user email.");
-    return {
-      redirect: new NextResponse(null, {
-        status: 302,
-        headers: { Location: "/?session_error=missing_email" },
-      }),
-    };
-  }
-
-  const prisma = getPrismaClient();
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
-
-  if (!user) {
-    console.error("User does not exist.");
-    return {
-      redirect: new NextResponse(null, {
-        status: 302,
-        headers: { Location: "/?session_error=missing_user" },
-      }),
-    };
-  }
-
-  return { user: { id: user.id, email: user.email } };
 }
 
 export function createSearchRoute<T extends object>({
