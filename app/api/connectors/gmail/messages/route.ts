@@ -10,6 +10,8 @@ import {
   extractTextFromPart,
 } from "@/lib/connectors/gmail-body";
 import { GmailListItem, GmailListMetadata } from "@/lib/connectors/types";
+import { fetchWithRateLimitRetry } from "@/lib/connectors/google-oauth-client";
+import { GoogleAuthRequiredError } from "@/lib/connectors/errors";
 
 interface GmailHeader {
   name: string;
@@ -54,9 +56,11 @@ export async function gmailFetch<T = unknown>(
   const url = new URL(`https://gmail.googleapis.com/gmail/v1/users/me${path}`);
   for (const [key, value] of params) url.searchParams.append(key, value);
 
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  const response = await fetchWithRateLimitRetry(GMAIL_PROVIDER_ID, () =>
+    fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }),
+  );
 
   const text = await response.text();
   let data: unknown = null;
@@ -68,11 +72,12 @@ export async function gmailFetch<T = unknown>(
     }
   }
 
+  if (response.status === 401 || response.status === 403) {
+    throw new GoogleAuthRequiredError(GMAIL_PROVIDER_ID);
+  }
+
   if (!response.ok) {
-    const body = data ?? text;
-    throw new Error(
-      `Gmail API error: ${typeof body === "string" ? body : JSON.stringify(body)}`,
-    );
+    throw new Error(`Gmail API error: status ${response.status}`);
   }
 
   return data as T;

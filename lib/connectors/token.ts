@@ -1,5 +1,6 @@
 import { getPrismaClient } from "@/lib/prisma/client";
 import { getProvider } from "./registry";
+import { IntegrationAuthError } from "./errors";
 
 export const REFRESH_BUFFER_MS = 60_000;
 
@@ -44,7 +45,19 @@ export async function getValidAccessToken(
     throw new Error(`Unknown provider: ${providerId}`);
   }
 
-  const refreshed = await provider.refreshAccessToken(integration.refreshToken);
+  let refreshed;
+  try {
+    refreshed = await provider.refreshAccessToken(integration.refreshToken);
+  } catch (error) {
+    if ((error as Error & { code?: string }).code === "invalid_grant") {
+      await prisma.integration.update({
+        where: { id: integration.id },
+        data: { isActive: false },
+      });
+      throw new IntegrationAuthError(providerId, integration.id);
+    }
+    throw error;
+  }
 
   await prisma.integration.update({
     where: { id: integration.id },
