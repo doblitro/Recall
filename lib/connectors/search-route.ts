@@ -3,9 +3,22 @@ import {
   getActiveIntegrations,
   getValidAccessToken,
 } from "@/lib/connectors/token";
+import {
+  IntegrationAuthError,
+  RateLimitedError,
+  GoogleAuthRequiredError,
+} from "@/lib/connectors/errors";
 import { getPrismaClient } from "@/lib/prisma/client";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { SearchFailureReason, SearchErrorEntry } from "@/lib/connectors/types";
+
+function reasonFor(error: unknown): SearchFailureReason {
+  if (error instanceof IntegrationAuthError) return "reauth_required";
+  if (error instanceof GoogleAuthRequiredError) return "reauth_required";
+  if (error instanceof RateLimitedError) return "rate_limited";
+  return "fetch_failed";
+}
 
 async function resolveSessionUser(): Promise<
   { user: { id: string; email: string } } | { redirect: NextResponse }
@@ -101,7 +114,7 @@ export function createSearchRoute<T extends object>({
         );
       }
 
-      const itemsByAccount = await Promise.all(
+      const settled = await Promise.allSettled(
         targetIntegrations.map(async (integration) => {
           const accessToken = await getValidAccessToken(
             user.id,
@@ -117,9 +130,52 @@ export function createSearchRoute<T extends object>({
         }),
       );
 
-      return NextResponse.json({ [itemsKey]: itemsByAccount.flat() });
+      const items: T[] = [];
+      const errors: SearchErrorEntry[] = [];
+
+      for (let index = 0; index < settled.length; index++) {
+        const result = settled[index];
+        const integration = targetIntegrations[index];
+
+        if (result.status === "fulfilled") {
+          items.push(...(result.value as T[]));
+          continue;
+        }
+
+        const reason = reasonFor(result.reason);
+        if (result.reason instanceof GoogleAuthRequiredError) {
+          await getPrismaClient().integration.update({
+            where: { id: integration.id },
+            data: { isActive: false },
+          });
+        }
+
+        console.error(`[${providerId}] search failed`, {
+          integrationId: integration.id,
+          reason,
+        });
+        errors.push({
+          integrationId: integration.id,
+          accountEmail: integration.accountEmail,
+          reason,
+        });
+      }
+
+      if (items.length === 0 && errors.length > 0) {
+        return NextResponse.json(
+          { error: `Failed to search ${itemsKey}`, errors },
+          { status: 502 },
+        );
+      }
+
+      return NextResponse.json({
+        [itemsKey]: items,
+        ...(errors.length > 0 ? { errors } : {}),
+      });
     } catch (error) {
-      console.error("Search Error:", error);
+      console.error(`[${providerId}] search error`, {
+        name: error instanceof Error ? error.name : "unknown",
+      });
       return NextResponse.json(
         { error: `Failed to search ${itemsKey}` },
         { status: 500 },
@@ -193,7 +249,10 @@ export function createDetailRoute<T extends object>({
         },
       });
     } catch (error) {
-      console.error("Detail Error:", error);
+      console.error(`[${providerId}] detail error`, {
+        integrationId: integration.id,
+        name: error instanceof Error ? error.name : "unknown",
+      });
       return NextResponse.json(
         { error: `Failed to fetch ${itemKey} detail` },
         { status: 500 },

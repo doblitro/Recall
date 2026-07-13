@@ -102,3 +102,14 @@ export interface DriveDetailMetadata extends DriveListMetadata {
 
 export type DriveListItem = SearchResult<DriveListMetadata>;
 export type DriveDetailItem = SearchResult<DriveDetailMetadata>;
+
+// ---- Search error reporting ----
+
+export type SearchFailureReason =
+  "reauth_required" | "rate_limited" | "fetch_failed";
+
+export interface SearchErrorEntry {
+  integrationId: string;
+  accountEmail: string | null;
+  reason: SearchFailureReason;
+}
