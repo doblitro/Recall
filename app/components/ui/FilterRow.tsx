@@ -24,8 +24,8 @@ const FilterButton = ({
   return (
     <button
       onClick={onClick}
-      className={`text-foreground flex items-center gap-1.5 rounded-xl px-2 py-1
-        hover:cursor-pointer ${isActive && activeButton}`}
+      className={`text-foreground flex shrink-0 cursor-pointer items-center
+        gap-1.5 rounded-xl px-2 py-1 ${isActive && activeButton}`}
     >
       {image && (
         <Image
@@ -47,7 +47,7 @@ const FilterButton = ({
         />
       ) : (
         count !== undefined && (
-          <span key="count" className="animate-fade-in ml-0.5 text-xs">
+          <span key="count" className="animate-fade-in pl-0.5 text-xs">
             {count}
           </span>
         )
@@ -77,7 +77,7 @@ const FilterRow = ({
     isSearching || CONNECTOR_LIST.some((c) => loadingByProvider?.[c.id]);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="my-2 flex w-fit items-center gap-2">
       <FilterButton
         label={"All"}
         count={total}
