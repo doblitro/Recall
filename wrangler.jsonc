@@ -5,7 +5,7 @@
   "compatibility_date": "2026-07-08",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
-    "NEXTAUTH_URL": "https://recall.juliennepanes.workers.dev",
+    "NEXTAUTH_URL": "https://recall.project1of1.com",
   },
   "assets": {
     "directory": ".open-next/assets",
