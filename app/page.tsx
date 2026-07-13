@@ -18,7 +18,10 @@ export default async function Home() {
       {session ? (
         <>
           <Sidebar />
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div
+            id="results-scroll-container"
+            className="min-h-0 flex-1 overflow-y-auto"
+          >
             <main className="mx-auto max-w-[90%] lg:max-w-4/5">
               {!!isAuthenticated && <Main />}
             </main>

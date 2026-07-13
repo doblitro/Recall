@@ -13,9 +13,12 @@ import useGmailResults from "../gmail/useGmailResults";
 import { useSearchFilter } from "@/app/providers/SearchFilterProvider";
 import FilterRow from "./FilterRow";
 import { useDebouncedValue } from "@tanstack/react-pacer";
-import { Search, X } from "lucide-react";
+import { ChevronDown, Search, X } from "lucide-react";
 import ResultCard from "./ResultCard";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
+
+const Results = dynamic(() => import("./ResultsContainer"));
 
 const Main = () => {
   const [inputValue, setInputValue] = useState("");
@@ -30,6 +33,13 @@ const Main = () => {
   );
 
   const hasStartedSearching = inputValue.trim().length > 0;
+
+  const [isAtBottom, setIsAtBottom] = useState(false);
+
+  const scrollToBottom = () => {
+    const el = document.getElementById("results-scroll-container");
+    el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  };
 
   const { activeProvider, setActiveProvider } = useSearchFilter();
 
@@ -52,9 +62,16 @@ const Main = () => {
   };
 
   const results = useMemo(() => {
-    const merged = [...drive.items, ...gmail.items].filter(
-      (item) => activeProvider === null || item.provider === activeProvider,
-    );
+    const seen = new Set<string>();
+    const merged = [...drive.items, ...gmail.items].filter((item) => {
+      if (activeProvider !== null && item.provider !== activeProvider)
+        return false;
+
+      const key = `${item.provider}:${item.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
     merged.sort((a, b) => {
       const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
@@ -117,6 +134,28 @@ const Main = () => {
 
     return () => obs.disconnect();
   }, []);
+
+  useEffect(() => {
+    const el = document.getElementById("results-scroll-container");
+    if (!el) return;
+
+    const checkIsAtBottom = () => {
+      const distanceFromBottom =
+        el.scrollHeight - el.scrollTop - el.clientHeight;
+      setIsAtBottom(distanceFromBottom < 32);
+    };
+
+    checkIsAtBottom();
+    el.addEventListener("scroll", checkIsAtBottom, { passive: true });
+
+    const resizeObserver = new ResizeObserver(checkIsAtBottom);
+    if (el.firstElementChild) resizeObserver.observe(el.firstElementChild);
+
+    return () => {
+      el.removeEventListener("scroll", checkIsAtBottom);
+      resizeObserver.disconnect();
+    };
+  }, [results.length, isSearching]);
 
   return (
     <div
@@ -201,13 +240,7 @@ const Main = () => {
           }`}
       >
         {!isSearching ? (
-          <div key="results" className="animate-fade-in flex flex-col gap-2">
-            {results.length > 0 ? (
-              results.map((item) => item.card)
-            ) : (
-              <p className="text-foreground/50">No results.</p>
-            )}
-          </div>
+          <Results results={results} />
         ) : (
           <div key="skeletons" className="animate-fade-in flex flex-col gap-2">
             <ResultCard
@@ -234,6 +267,20 @@ const Main = () => {
           </div>
         )}
       </div>
+
+      {!isSearching && results.length > 0 && !isAtBottom && (
+        <button
+          type="button"
+          aria-label="Scroll to bottom"
+          onClick={scrollToBottom}
+          className="bg-surface border-border text-muted-foreground
+            hover:bg-surface-hover hover:text-foreground fixed right-6 bottom-6
+            z-20 flex h-10 w-10 animate-bounce cursor-pointer items-center
+            justify-center rounded-full border shadow-lg transition-colors"
+        >
+          <ChevronDown className="h-5 w-5" />
+        </button>
+      )}
     </div>
   );
 };
