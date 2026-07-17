@@ -1,19 +1,9 @@
 import NextAuth, { type AuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
 import { getPrismaClient } from "@/lib/prisma/client";
+import { baseAuthOptions } from "@/lib/auth/auth-config";
 
 export const authOptions: AuthOptions = {
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          scope: "openid email profile",
-        },
-      },
-    }),
-  ],
+  ...baseAuthOptions,
   callbacks: {
     async signIn({ account, profile }) {
       if (!profile?.email) {

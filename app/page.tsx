@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "./api/auth/[...nextauth]/route";
+import { baseAuthOptions } from "@/lib/auth/auth-config";
 import Main from "./components/ui/Main";
 import Sidebar from "./components/ui/Sidebar";
 import { BrandTypeface } from "./components/ui/Brand";
@@ -7,7 +7,7 @@ import LoginButton from "./components/auth/LoginButton";
 import ChangingText from "./components/ui/ChangingText";
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(baseAuthOptions);
   const isAuthenticated = !!session;
 
   return (
