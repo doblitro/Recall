@@ -201,3 +201,8 @@ button {
 .animate-fade-in {
   animation: fade-in 0.15s ease-out;
 }
+
+a,
+button {
+  cursor: pointer;
+}
