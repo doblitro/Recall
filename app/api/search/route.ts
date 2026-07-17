@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("[search] query failed", {
       name: error instanceof Error ? error.name : "unknown",
+      message: error instanceof Error ? error.message : String(error),
     });
     return NextResponse.json({ error: "Search failed" }, { status: 500 });
   }

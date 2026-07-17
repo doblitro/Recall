@@ -5,9 +5,12 @@ import {
   formatParticipant,
   toParticipant,
 } from "@/lib/connectors/participants";
-import { SearchItemKind } from "@/app/generated/prisma/enums";
+import { SearchItemKind } from "@/lib/db/schema";
 import { upsertSearchItems, deleteSearchItems } from "./upsert";
 import { SyncAdapter, SyncContext, SyncResult, SearchItemInput } from "./types";
+import { mapWithConcurrency } from "./concurrency";
+
+const FETCH_CONCURRENCY = 10;
 
 const BODY_TEXT_MAX_CHARS = 20_000;
 const LIST_PAGE_SIZE = "100";
@@ -116,8 +119,8 @@ async function fullSync(ctx: SyncContext): Promise<SyncResult> {
     pageToken = data.nextPageToken;
   } while (pageToken);
 
-  const items = await Promise.all(
-    files.map((file) => mapDriveFile(ctx.accessToken, file)),
+  const items = await mapWithConcurrency(files, FETCH_CONCURRENCY, (file) =>
+    mapDriveFile(ctx.accessToken, file),
   );
   const upserted = await upsertSearchItems(
     ctx.userId,

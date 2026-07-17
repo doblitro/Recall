@@ -5,9 +5,12 @@ import {
   parseParticipants,
   formatParticipant,
 } from "@/lib/connectors/participants";
-import { SearchItemKind } from "@/app/generated/prisma/enums";
+import { SearchItemKind } from "@/lib/db/schema";
 import { upsertSearchItems, deleteSearchItems } from "./upsert";
 import { SyncAdapter, SyncContext, SyncResult, SearchItemInput } from "./types";
+import { mapWithConcurrency } from "./concurrency";
+
+const FETCH_CONCURRENCY = 10;
 
 const BODY_TEXT_MAX_CHARS = 20_000;
 const LIST_PAGE_SIZE = 100;
@@ -94,8 +97,8 @@ async function fetchAndUpsertMessages(
 ): Promise<number> {
   if (messageIds.length === 0) return 0;
 
-  const items = await Promise.all(
-    messageIds.map((id) => fetchAndMapMessage(ctx.accessToken, id)),
+  const items = await mapWithConcurrency(messageIds, FETCH_CONCURRENCY, (id) =>
+    fetchAndMapMessage(ctx.accessToken, id),
   );
   return upsertSearchItems(
     ctx.userId,
