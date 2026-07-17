@@ -46,4 +46,3 @@ yarn-error.log*
 next-env.d.ts
 
 credentials.json
-/app/generated/prisma
