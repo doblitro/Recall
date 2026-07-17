@@ -22,11 +22,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { rows, hasMore } = await searchItems(user.id, keyword, page);
-    const filtered = provider
-      ? rows.filter((r) => r.provider === provider)
-      : rows;
-    const items = filtered.map((row) => buildResultPayload(row, keyword));
+    const { rows, hasMore } = await searchItems(
+      user.id,
+      keyword,
+      page,
+      provider ?? undefined,
+    );
+    const items = rows.map((row) => buildResultPayload(row, keyword));
 
     return NextResponse.json({ items, hasMore });
   } catch (error) {

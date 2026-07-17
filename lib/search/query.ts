@@ -33,6 +33,7 @@ export async function searchItems(
   userId: string,
   rawKeyword: string,
   page: number,
+  provider?: string,
 ): Promise<{ rows: RankedSearchRow[]; hasMore: boolean }> {
   const keyword = rawKeyword.trim();
   if (!keyword || page < 0 || page >= MAX_PAGES)
@@ -42,6 +43,7 @@ export async function searchItems(
   const tsQuery = buildPrefixTsQuery(keyword);
   const substring = `%${keyword}%`;
   const prefix = `${keyword}%`;
+  const providerClause = provider ? sql`AND si.provider = ${provider}` : sql``;
 
   // Fetch one extra row to cheaply determine hasMore without a second COUNT query.
 
@@ -74,6 +76,7 @@ export async function searchItems(
       OR ${keyword} <% si.title
       OR ${keyword} <% si.participants
     )
+    ${providerClause}
   ORDER BY rank DESC, si."updatedAt" DESC
   LIMIT ${PAGE_SIZE + 1} OFFSET ${offset};
   `);
