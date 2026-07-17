@@ -6,6 +6,7 @@ import { initiateOAuthConnect } from "@/lib/connectors/client-connect";
 import { LogOut, PlusIcon } from "lucide-react";
 import Dialog from "../ui/Dialog";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ActiveIndicator = () => {
   return <div className="h-1.5 w-1.5 rounded-full bg-green-600" />;
@@ -23,6 +24,7 @@ const ConnectButtons = ({
   const label = CONNECTOR_LIST.find((p) => p.id === type)?.label ?? type;
   const [isOpen, setIsDialogOpen] = useState(false);
   const [accountChosen, setAccountChosen] = useState<Connection | null>(null);
+  const queryClient = useQueryClient();
 
   const handleConnect = () => {
     initiateOAuthConnect(type).catch((error) => {
@@ -46,6 +48,8 @@ const ConnectButtons = ({
           throw new Error(`Failed to disconnect ${type}`);
         }
         onRefresh();
+        queryClient.invalidateQueries({ queryKey: ["search"] });
+        queryClient.invalidateQueries({ queryKey: ["search-counts"] });
       })
       .catch((error) => {
         console.error(`Error disconnecting ${type}:`, error);
