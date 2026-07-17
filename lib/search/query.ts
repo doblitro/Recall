@@ -69,6 +69,7 @@ export async function searchItems(
   FROM "SearchItem" si
   JOIN "Integration" i ON i.id = si."integrationId"
   WHERE si."userId" = ${userId}
+    AND i."isActive" = true
     AND (
       si.title ILIKE ${substring}
       OR si.participants ILIKE ${substring}
