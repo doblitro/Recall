@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getServerSession } from "next-auth";
 import { baseAuthOptions } from "@/lib/auth/auth-config";
 import Main from "./components/ui/Main";
@@ -5,6 +6,7 @@ import Sidebar from "./components/ui/Sidebar";
 import { BrandTypeface } from "./components/ui/Brand";
 import LoginButton from "./components/auth/LoginButton";
 import ChangingText from "./components/ui/ChangingText";
+import OAuthResultToast from "./components/connectors/OAuthResultToast";
 
 export default async function Home() {
   const session = await getServerSession(baseAuthOptions);
@@ -17,6 +19,9 @@ export default async function Home() {
     >
       {session ? (
         <>
+          <Suspense fallback={null}>
+            <OAuthResultToast />
+          </Suspense>
           <Sidebar />
           <div
             id="results-scroll-container"
