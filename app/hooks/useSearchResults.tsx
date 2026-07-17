@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import ResultCard from "@/app/components/ui/ResultCard";
 import LinkedTitle from "@/app/components/ui/LinkedTitle";
 import useConnectorDetail from "@/app/hooks/useConnectorDetail";
@@ -174,6 +174,20 @@ const useSearchResults = (
     refetchOnWindowFocus: false,
   });
 
+  const countsQuery = useQuery({
+    queryKey: ["search-counts", searchKeyword],
+    queryFn: async (): Promise<Record<string, number>> => {
+      const params = new URLSearchParams({ keyword: searchKeyword });
+      const response = await fetch(`/api/search/counts?${params.toString()}`);
+      const json = await response.json();
+      if (!response.ok) throw new Error(json?.error ?? "Search failed");
+      return (json.counts ?? {}) as Record<string, number>;
+    },
+    enabled: !!searchKeyword,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
   const results = useMemo(
     () => query.data?.pages.flatMap((page) => page.items) ?? [],
     [query.data],
@@ -284,6 +298,7 @@ const useSearchResults = (
     hasMore: !!query.hasNextPage,
     loadMore: () => query.fetchNextPage(),
     isError: query.isError,
+    counts: countsQuery.data,
   };
 };
 

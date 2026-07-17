@@ -97,3 +97,37 @@ export async function searchItems(
   const hasMore = rows.length > PAGE_SIZE && page + 1 < MAX_PAGES;
   return { rows: rows.slice(0, PAGE_SIZE), hasMore };
 }
+
+export async function getSearchCounts(
+  userId: string,
+  rawKeyword: string,
+): Promise<Record<string, number>> {
+  const keyword = rawKeyword.trim();
+  if (!keyword) return {};
+
+  const tsQuery = buildPrefixTsQuery(keyword);
+  const substring = `%${keyword}%`;
+
+  const db = getDb();
+  const result = await db.execute(sql`
+  SELECT si.provider, COUNT(*)::int AS count
+  FROM "SearchItem" si
+  JOIN "Integration" i ON i.id = si."integrationId"
+  WHERE si."userId" = ${userId}
+    AND i."isActive" = true
+    AND (
+      si.title ILIKE ${substring}
+      OR si.participants ILIKE ${substring}
+      OR si."searchVector" @@ to_tsquery('english', ${tsQuery})
+      OR ${keyword} <% si.title
+      OR ${keyword} <% si.participants
+    )
+  GROUP BY si.provider;
+  `);
+
+  return Object.fromEntries(
+    (result.rows as unknown as { provider: string; count: number }[]).map(
+      (r) => [r.provider, r.count],
+    ),
+  );
+}

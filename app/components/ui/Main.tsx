@@ -42,6 +42,7 @@ const Main = () => {
     hasMore,
     loadMore,
     isError,
+    counts,
   } = useSearchResults(searchKeyword, activeProvider);
 
   const isSearching = debouncer.state.isPending || isFetching;
@@ -163,6 +164,7 @@ const Main = () => {
               activeProvider={activeProvider}
               setActiveProvider={setActiveProvider}
               isSearching={isSearching}
+              counts={counts}
             />
           </div>
         </div>
