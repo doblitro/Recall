@@ -1,6 +1,8 @@
-import { getPrismaClient } from "@/lib/prisma/client";
 import { getProvider } from "./registry";
 import { IntegrationAuthError } from "./errors";
+import { getDb } from "../db/client";
+import { integrations } from "../db/schema";
+import { and, eq } from "drizzle-orm";
 
 export const REFRESH_BUFFER_MS = 60_000;
 
@@ -8,10 +10,17 @@ export async function getActiveIntegrations(
   userId: string,
   providerId: string,
 ) {
-  const prisma = getPrismaClient();
-  return prisma.integration.findMany({
-    where: { userId, provider: providerId, isActive: true },
-  });
+  const db = getDb();
+  return db
+    .select()
+    .from(integrations)
+    .where(
+      and(
+        eq(integrations.userId, userId),
+        eq(integrations.provider, providerId),
+        eq(integrations.isActive, true),
+      ),
+    );
 }
 
 export async function getValidAccessToken(
@@ -19,10 +28,19 @@ export async function getValidAccessToken(
   providerId: string,
   integrationId: string,
 ): Promise<string> {
-  const prisma = getPrismaClient();
-  const integration = await prisma.integration.findFirst({
-    where: { id: integrationId, userId, provider: providerId, isActive: true },
-  });
+  const db = getDb();
+  const [integration] = await db
+    .select()
+    .from(integrations)
+    .where(
+      and(
+        eq(integrations.id, integrationId),
+        eq(integrations.userId, userId),
+        eq(integrations.provider, providerId),
+        eq(integrations.isActive, true),
+      ),
+    )
+    .limit(1);
 
   if (!integration) {
     throw new Error(`No active ${providerId} integration for this user`);
@@ -50,22 +68,22 @@ export async function getValidAccessToken(
     refreshed = await provider.refreshAccessToken(integration.refreshToken);
   } catch (error) {
     if ((error as Error & { code?: string }).code === "invalid_grant") {
-      await prisma.integration.update({
-        where: { id: integration.id },
-        data: { isActive: false },
-      });
+      await db
+        .update(integrations)
+        .set({
+          isActive: false,
+        })
+        .where(eq(integrations.id, integration.id));
+
       throw new IntegrationAuthError(providerId, integration.id);
     }
     throw error;
   }
 
-  await prisma.integration.update({
-    where: { id: integration.id },
-    data: {
-      accessToken: refreshed.accessToken,
-      expiresAt: refreshed.expiresAt,
-    },
-  });
+  await db
+    .update(integrations)
+    .set({ accessToken: refreshed.accessToken, expiresAt: refreshed.expiresAt })
+    .where(eq(integrations.id, integration.id));
 
   return refreshed.accessToken;
 }

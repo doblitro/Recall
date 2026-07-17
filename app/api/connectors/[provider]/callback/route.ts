@@ -1,10 +1,12 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { readAndClearOAuthStateCookie } from "@/lib/connectors/oauth-state";
 import { getProvider } from "@/lib/connectors/registry";
-import { getPrismaClient } from "@/lib/prisma/client";
+import { getDb } from "@/lib/db/client";
+import { integrations, users } from "@/lib/db/schema";
 import { runSyncForIntegration } from "@/lib/sync/orchestrator";
 import { getServerSession } from "next-auth";
 import { NextResponse, after } from "next/server";
+import { eq } from "drizzle-orm";
 
 export async function GET(
   request: Request,
@@ -90,10 +92,12 @@ export async function GET(
     });
   }
 
-  const prisma = getPrismaClient();
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
+  const db = getDb();
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, session.user.email))
+    .limit(1);
 
   if (!user) {
     console.error("User does not exist.");
@@ -103,14 +107,9 @@ export async function GET(
     });
   }
 
-  const integration = await prisma.integration.upsert({
-    where: {
-      provider_providerAccountId: {
-        provider: providerId,
-        providerAccountId: tokens.providerAccountId,
-      },
-    },
-    create: {
+  const [integration] = await db
+    .insert(integrations)
+    .values({
       userId: user.id,
       provider: providerId,
       providerAccountId: tokens.providerAccountId,
@@ -121,18 +120,21 @@ export async function GET(
       refreshToken: tokens.refreshToken,
       expiresAt: tokens.expiresAt,
       isActive: true,
-    },
-    update: {
-      userId: user.id,
-      accountEmail: tokens.accountEmail,
-      accountName: tokens.accountName,
-      accountAvatar: tokens.accountAvatar,
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresAt: tokens.expiresAt,
-      isActive: true,
-    },
-  });
+    })
+    .onConflictDoUpdate({
+      target: [integrations.provider, integrations.providerAccountId],
+      set: {
+        userId: user.id,
+        accountEmail: tokens.accountEmail,
+        accountName: tokens.accountName,
+        accountAvatar: tokens.accountAvatar,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresAt: tokens.expiresAt,
+        isActive: true,
+      },
+    })
+    .returning();
 
   // Kick off an initial sync without blocking the redirect response — after()
   // maps onto ctx.waitUntil on Cloudflare/OpenNext, so this keeps running

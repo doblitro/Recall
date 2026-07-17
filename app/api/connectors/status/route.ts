@@ -1,5 +1,7 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { getPrismaClient } from "@/lib/prisma/client";
+import { getDb } from "@/lib/db/client";
+import { users, integrations } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
@@ -9,17 +11,22 @@ export async function GET() {
     return NextResponse.json({ connections: {} });
   }
 
-  const prisma = getPrismaClient();
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
+  const db = getDb();
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, session.user.email))
+    .limit(1);
   if (!user) {
     return NextResponse.json({ connections: {} });
   }
 
-  const integrations = await prisma.integration.findMany({
-    where: { userId: user.id, isActive: true },
-  });
+  const activeIntegrations = await db
+    .select()
+    .from(integrations)
+    .where(
+      and(eq(integrations.userId, user.id), eq(integrations.isActive, true)),
+    );
 
   const connections: Record<
     string,
@@ -31,7 +38,7 @@ export async function GET() {
     }[]
   > = {};
 
-  for (const integration of integrations) {
+  for (const integration of activeIntegrations) {
     const list = (connections[integration.provider] ??= []);
     list.push({
       id: integration.id,

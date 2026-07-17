@@ -1,4 +1,4 @@
-import { SearchItemKind } from "@/app/generated/prisma/enums";
+import { SearchItemKind } from "@/lib/db/schema";
 
 export interface SearchItemInput {
   externalId: string;

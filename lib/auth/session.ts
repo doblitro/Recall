@@ -1,7 +1,9 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { getPrismaClient } from "@/lib/prisma/client";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { getDb } from "../db/client";
+import { users } from "../db/schema";
+import { eq } from "drizzle-orm";
 
 export async function resolveSessionUser(): Promise<
   { user: { id: string; email: string } } | { redirect: NextResponse }
@@ -28,10 +30,12 @@ export async function resolveSessionUser(): Promise<
     };
   }
 
-  const prisma = getPrismaClient();
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
+  const db = getDb();
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, session.user.email))
+    .limit(1);
 
   if (!user) {
     console.error("User does not exist.");

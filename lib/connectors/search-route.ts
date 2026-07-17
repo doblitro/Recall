@@ -7,7 +7,9 @@ import {
   RateLimitedError,
   GoogleAuthRequiredError,
 } from "@/lib/connectors/errors";
-import { getPrismaClient } from "@/lib/prisma/client";
+import { getDb } from "@/lib/db/client";
+import { integrations as integrationsTable } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
 import { resolveSessionUser } from "@/lib/auth/session";
 import { NextRequest, NextResponse } from "next/server";
 import { SearchFailureReason, SearchErrorEntry } from "@/lib/connectors/types";
@@ -100,10 +102,10 @@ export function createSearchRoute<T extends object>({
 
         const reason = reasonFor(result.reason);
         if (result.reason instanceof GoogleAuthRequiredError) {
-          await getPrismaClient().integration.update({
-            where: { id: integration.id },
-            data: { isActive: false },
-          });
+          await getDb()
+            .update(integrationsTable)
+            .set({ isActive: false })
+            .where(eq(integrationsTable.id, integration.id));
         }
 
         console.error(`[${providerId}] search failed`, {
@@ -175,15 +177,19 @@ export function createDetailRoute<T extends object>({
       );
     }
 
-    const prisma = getPrismaClient();
-    const integration = await prisma.integration.findFirst({
-      where: {
-        id: integrationId,
-        userId: user.id,
-        provider: providerId,
-        isActive: true,
-      },
-    });
+    const db = getDb();
+    const [integration] = await db
+      .select()
+      .from(integrationsTable)
+      .where(
+        and(
+          eq(integrationsTable.id, integrationId),
+          eq(integrationsTable.userId, user.id),
+          eq(integrationsTable.provider, providerId),
+          eq(integrationsTable.isActive, true),
+        ),
+      )
+      .limit(1);
 
     if (!integration) {
       return NextResponse.json({ error: notConnectedMessage }, { status: 404 });

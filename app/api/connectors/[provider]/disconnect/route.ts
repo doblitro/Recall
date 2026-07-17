@@ -1,6 +1,8 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getProvider } from "@/lib/connectors/registry";
-import { getPrismaClient } from "@/lib/prisma/client";
+import { getDb } from "@/lib/db/client";
+import { users, integrations } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
@@ -41,10 +43,12 @@ export async function POST(
     });
   }
 
-  const prisma = getPrismaClient();
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
+  const db = getDb();
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, session.user.email))
+    .limit(1);
 
   if (!user) {
     console.error("User does not exist.");
@@ -63,14 +67,18 @@ export async function POST(
     );
   }
 
-  const integration = await prisma.integration.findFirst({
-    where: {
-      id: integrationId,
-      userId: user.id,
-      provider: providerId,
-      isActive: true,
-    },
-  });
+  const [integration] = await db
+    .select()
+    .from(integrations)
+    .where(
+      and(
+        eq(integrations.id, integrationId),
+        eq(integrations.userId, user.id),
+        eq(integrations.provider, providerId),
+        eq(integrations.isActive, true),
+      ),
+    )
+    .limit(1);
 
   if (!integration) {
     return NextResponse.json(
@@ -81,14 +89,14 @@ export async function POST(
 
   try {
     await provider.revoke(integration.accessToken);
-  } catch (err: any) {
-    console.error(`Failed to revoke ${providerId} token:`, err.message);
+  } catch (err) {
+    console.error(`Failed to revoke ${providerId} token:`, err);
   }
 
-  await prisma.integration.update({
-    where: { id: integration.id },
-    data: { isActive: false, accessToken: "", refreshToken: null },
-  });
+  await db
+    .update(integrations)
+    .set({ isActive: false, accessToken: "", refreshToken: null })
+    .where(eq(integrations.id, integration.id));
 
   return NextResponse.json({
     message: `${provider.label} disconnected successfully.`,

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveSessionUser } from "@/lib/auth/session";
-import { getPrismaClient } from "@/lib/prisma/client";
+import { getDb } from "@/lib/db/client";
+import { integrations } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
 import { runSyncForIntegration } from "@/lib/sync/orchestrator";
 
 interface SyncRequestBody {
@@ -25,17 +27,30 @@ export async function POST(request: NextRequest) {
     // no body provided — sync all integrations
   }
 
-  const prisma = getPrismaClient();
+  const db = getDb();
 
-  const integrations = body.integrationId
-    ? await prisma.integration.findMany({
-        where: { id: body.integrationId, userId: user.id, isActive: true },
-      })
-    : await prisma.integration.findMany({
-        where: { userId: user.id, isActive: true },
-      });
+  const targetIntegrations = body.integrationId
+    ? await db
+        .select()
+        .from(integrations)
+        .where(
+          and(
+            eq(integrations.id, body.integrationId),
+            eq(integrations.userId, user.id),
+            eq(integrations.isActive, true),
+          ),
+        )
+    : await db
+        .select()
+        .from(integrations)
+        .where(
+          and(
+            eq(integrations.userId, user.id),
+            eq(integrations.isActive, true),
+          ),
+        );
 
-  if (body.integrationId && integrations.length === 0) {
+  if (body.integrationId && targetIntegrations.length === 0) {
     return NextResponse.json(
       { error: "Integration not found" },
       { status: 404 },
@@ -44,7 +59,7 @@ export async function POST(request: NextRequest) {
 
   const results: SyncResultEntry[] = [];
 
-  for (const integration of integrations) {
+  for (const integration of targetIntegrations) {
     try {
       await runSyncForIntegration(integration.id);
       results.push({
