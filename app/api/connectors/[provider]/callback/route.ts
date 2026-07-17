@@ -6,7 +6,7 @@ import { integrations, users } from "@/lib/db/schema";
 import { runSyncForIntegration } from "@/lib/sync/orchestrator";
 import { getServerSession } from "next-auth";
 import { NextResponse, after } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export async function GET(
   request: Request,
@@ -104,6 +104,27 @@ export async function GET(
     return new Response(null, {
       status: 302,
       headers: { Location: "/?session_error=missing_user" },
+    });
+  }
+
+  const [existing] = await db
+    .select({ userId: integrations.userId })
+    .from(integrations)
+    .where(
+      and(
+        eq(integrations.provider, providerId),
+        eq(integrations.providerAccountId, tokens.providerAccountId),
+      ),
+    )
+    .limit(1);
+
+  if (existing && existing.userId !== user.id) {
+    console.error(
+      "Attempted to connect an account already owned by another user.",
+    );
+    return new Response(null, {
+      status: 302,
+      headers: { Location: "/?provider_error=account_in_use" },
     });
   }
 
