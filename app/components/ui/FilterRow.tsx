@@ -61,27 +61,22 @@ const FilterRow = ({
   setActiveProvider,
   counts,
   isSearching,
-  loadingByProvider,
 }: {
   activeProvider: ProviderFilter;
   setActiveProvider: (id: ProviderFilter) => void;
   counts?: Partial<Record<string, number>>;
   isSearching?: boolean;
-  loadingByProvider?: Partial<Record<string, boolean>>;
 }) => {
   const total = counts
     ? CONNECTOR_LIST.reduce((sum, c) => sum + (counts[c.id] ?? 0), 0)
     : undefined;
-
-  const anyLoading =
-    isSearching || CONNECTOR_LIST.some((c) => loadingByProvider?.[c.id]);
 
   return (
     <div className="my-2 flex w-fit items-center gap-2">
       <FilterButton
         label={"All"}
         count={total}
-        loading={anyLoading}
+        loading={isSearching && activeProvider === null}
         onClick={() => setActiveProvider(null)}
         isActive={activeProvider === null}
       />
@@ -91,7 +86,7 @@ const FilterRow = ({
           label={c.label}
           count={counts?.[c.id]}
           image={c.image ? c.image : undefined}
-          loading={isSearching || loadingByProvider?.[c.id]}
+          loading={isSearching && activeProvider === c.id}
           onClick={() => setActiveProvider(c.id)}
           isActive={activeProvider === c.id}
         />
